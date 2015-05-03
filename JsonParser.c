@@ -277,6 +277,12 @@ bool ScanInteger(JsonNode* node)
 }
 
 
+void ScanFraction(JsonNode* node)
+{
+    
+}
+
+
 void ScanNumber(JsonNode* node)
 {
     ScanInteger(node);
