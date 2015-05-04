@@ -206,7 +206,7 @@ bool ScanMinus(JsonNode* node)
 bool ScanZero(JsonNode* node)
 {
     char character = *(node->source + node->offset + node->length);
-    if (character == '-')
+    if (character == '0')
     {
         node->length++;
         return TRUE;
