@@ -203,6 +203,51 @@ bool ScanMinus(JsonNode* node)
 }
 
 
+bool ScanSign(JsonNode* node)
+{
+    char character = *(node->source + node->offset + node->length);
+    if ((character == '-') || (character == '+'))
+    {
+        node->length++;
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+
+bool ScanDecimalSeparator(JsonNode* node)
+{
+    char character = *(node->source + node->offset + node->length);
+    if (character == '.')
+    {
+        node->length++;
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+
+bool ScanExponentSeparator(JsonNode* node)
+{
+    char character = *(node->source + node->offset + node->length);
+    if ((character == 'e') || (character == 'E'))
+    {
+        node->length++;
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+
 bool ScanZero(JsonNode* node)
 {
     char character = *(node->source + node->offset + node->length);
@@ -277,33 +322,38 @@ bool ScanInteger(JsonNode* node)
 }
 
 
-void ScanFraction(JsonNode* node)
+bool ScanFraction(JsonNode* node)
 {
-    
+    if (ScanDecimalSeparator(node))
+    {
+        if (! ScanDigits(node))
+        {
+            node->type = JSON_INVALID;
+        }
+    }
+}
+
+
+bool ScanExponent(JsonNode* node)
+{
+    if (ScanExponentSeparator(node))
+    {
+        ScanSign(node);
+        if (! ScanDigits(node))
+        {
+            node->type = JSON_INVALID;
+        }
+    }
 }
 
 
 void ScanNumber(JsonNode* node)
 {
-    ScanInteger(node);
-//    char character;
-//    bool scanning = TRUE;
-//    while (scanning)
-//    {
-//        character = *(node->source + node->offset + node->length);
-//        if (isdigit(character) || (strchr(NUMBER_CHARACTERS, character) != NULL))
-//        {
-//            node->length++;
-//        }
-//        else
-//        {
-//            scanning = FALSE;
-//        }
-//    }
-//    if (node->length > 0)
-//    {
-//        node->type = JSON_NUMBER;
-//    }
+    if (ScanInteger(node))
+    {
+        ScanFraction(node);
+        ScanExponent(node);
+    }
 }
 
 

@@ -65,7 +65,7 @@ void ExpectEqualInteger(int expected, int actual)
     {
         sprintf(message, "expected = %d, actual = %d", expected, actual);
     }
-    PrintTestResult(pass, testName);
+    PrintTestResult(pass, message);
 }
 
 
@@ -82,42 +82,28 @@ void ExpectEqualString(const char* expected, const JsonNode* actual)
         sprintf(message, "expected = %s, actual = ", expected);
         strncat(message, actual->source + actual->offset, actual->length);
     }
-    PrintTestResult(pass, testName);
+    PrintTestResult(pass, message);
+}
+
+
+void ExpectValidInteger(const char* source, const char* expected)
+{
+    JsonNode object, pair, value;
+    Initialize(source, &object);
+    ParseFirst(&object, &pair);
+    GetValue(&pair, &value);
+    ExpectEqualInteger(JSON_NUMBER, value.type);
+    ExpectEqualString(expected, &value);
 }
 
 
 void ValidIntegerTest() {
-    JsonNode object, pair, value;
-    Initialize("{\"int\":123}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString("123", &value);
-    Initialize("{\"int\":9}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString("9", &value);
-    Initialize("{\"int\":0}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString("0", &value);
-    Initialize("{\"int\":-0}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString("-0", &value);
-    Initialize("{\"int\":-8}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString("-8", &value);
-    Initialize("{\"int\":-75}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString("-75", &value);
+    ExpectValidInteger("{\"int\":123}", "123");
+    ExpectValidInteger("{\"int\":9}", "9");
+    ExpectValidInteger("{\"int\":0}", "0");
+    ExpectValidInteger("{\"int\":-0}", "-0");
+    ExpectValidInteger("{\"int\":-8}", "-8");
+    ExpectValidInteger("{\"int\":-75}", "-75");
 }
 
 
@@ -132,6 +118,45 @@ void InvalidIntegerTest() {
 }
 
 
+void ExpectValidReal(const char* source, const char* expected)
+{
+    JsonNode object, pair, value;
+    Initialize(source, &object);
+    ParseFirst(&object, &pair);
+    GetValue(&pair, &value);
+    ExpectEqualInteger(JSON_NUMBER, value.type);
+    ExpectEqualString(expected, &value);    
+}
+
+
+void ValidRealTest()
+{
+    ExpectValidReal("{\"real\":12.3}",  "12.3");
+    ExpectValidReal("{\"real\":-0.005}",  "-0.005");
+    ExpectValidReal("{\"real\":6.789e+1}",  "6.789e+1");
+    ExpectValidReal("{\"real\":98E-20}",  "98E-20");
+    ExpectValidReal("{\"real\":12e003}",  "12e003");
+}
+
+
+void InvalidRealTest()
+{
+    JsonNode object;
+    Initialize("{\"invalid\":.1}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":2.}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":3.a}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":4E5.6}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":33.e4}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":45.6E}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+}
+
+
 int main(int argc, char** argv) {
     printf("%%SUITE_STARTING%% JSON Parser Test\n");
     printf("%%SUITE_STARTED%%\n");
@@ -142,6 +167,14 @@ int main(int argc, char** argv) {
 
     StartTest("InvalidIntegerTest");
     InvalidIntegerTest();
+    FinishTest();
+
+    StartTest("ValidRealTest");
+    ValidRealTest();
+    FinishTest();
+
+    StartTest("InvalidRealTest");
+    InvalidRealTest();
     FinishTest();
 
     printf("%%SUITE_FINISHED%% time=0\n");
