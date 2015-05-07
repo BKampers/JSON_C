@@ -31,7 +31,7 @@
                      displayName="JSON Parser Test"
                      projectFiles="true"
                      kind="TEST">
-        <itemPath>tests/number_test.c</itemPath>
+        <itemPath>tests/parser_test.c</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -99,7 +99,7 @@
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="tests/number_test.c" ex="false" tool="0" flavor2="0">
+      <item path="tests/parser_test.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -166,7 +166,7 @@
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="tests/number_test.c" ex="false" tool="0" flavor2="0">
+      <item path="tests/parser_test.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
   </confs>

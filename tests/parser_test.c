@@ -157,6 +157,32 @@ void InvalidRealTest()
 }
 
 
+void ValidStringTest()
+{
+    JsonNode object, pair, value;
+    Initialize("{\"String\":\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"}", &object);
+    ParseFirst(&object, &pair);
+    GetValue(&pair, &value);
+    ExpectEqualString("\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"", &value);
+}
+
+
+void InvalidStringTest()
+{
+    JsonNode object;
+    Initialize("{\"invalid\":\"\\q\"}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":\"\\u1\"}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":\"\\u1a\"}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":\"\\u1ae\"}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+    Initialize("{\"invalid\":\"\\u1a2x\"}", &object);
+    ExpectEqualInteger(JSON_INVALID, object.type);
+}
+
+
 int main(int argc, char** argv) {
     printf("%%SUITE_STARTING%% JSON Parser Test\n");
     printf("%%SUITE_STARTED%%\n");
@@ -175,6 +201,14 @@ int main(int argc, char** argv) {
 
     StartTest("InvalidRealTest");
     InvalidRealTest();
+    FinishTest();
+
+    StartTest("ValidStringTest");
+    ValidStringTest();
+    FinishTest();
+
+    StartTest("InvalidStringTest");
+    InvalidStringTest();
     FinishTest();
 
     printf("%%SUITE_FINISHED%% time=0\n");

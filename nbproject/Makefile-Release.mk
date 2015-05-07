@@ -96,15 +96,15 @@ ${OBJECTDIR}/main.o: main.c
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/number_test.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/parser_test.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.c}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} 
 
 
-${TESTDIR}/tests/number_test.o: tests/number_test.c 
+${TESTDIR}/tests/parser_test.o: tests/parser_test.c 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -I. -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/number_test.o tests/number_test.c
+	$(COMPILE.c) -O2 -I. -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/parser_test.o tests/parser_test.c
 
 
 ${OBJECTDIR}/ApiStatus_nomain.o: ${OBJECTDIR}/ApiStatus.o ApiStatus.c 
