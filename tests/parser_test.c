@@ -10,7 +10,25 @@
 */
 
 
+const char* suiteName = NULL;
 const char* testName = NULL;
+
+
+void StartSuite(const char* name)
+{
+    suiteName = name;
+    printf("%%SUITE_STARTING%% ");
+    printf(suiteName);
+    printf("\n");
+    printf("%%SUITE_STARTED%%\n");
+}
+
+
+void FinishSuite()
+{
+    printf("%%SUITE_FINISHED%% time=0\n");
+    suiteName = NULL;
+}
 
 
 void StartTest(const char* name)
@@ -18,7 +36,9 @@ void StartTest(const char* name)
     testName = name;
     printf("%%TEST_STARTED%% ");
     printf(testName);
-    printf(" (JSON Parser Test)\n");
+    printf(" (");
+    printf(suiteName);
+    printf(")\n");
 }
 
 
@@ -53,10 +73,10 @@ void PrintTestResult(bool pass, const char* message)
 }
 
 
-void ExpectEqualInteger(int expected, int actual)
+void ExpectEqualBoolean(bool expected, bool actual)
 {
     char message[256];
-    bool pass = expected == actual;
+    bool pass = (expected) ? actual : ! actual;
     if (pass)
     {
         message[0] = '\0';
@@ -69,7 +89,61 @@ void ExpectEqualInteger(int expected, int actual)
 }
 
 
-void ExpectEqualString(const char* expected, const JsonNode* actual)
+void ExpectTrue(bool actual)
+{
+    ExpectEqualBoolean(TRUE, actual);
+}
+
+
+void ExpectEqualInteger(int expected, int actual)
+{
+    char message[256];
+    bool pass = (expected == actual);
+    if (pass)
+    {
+        message[0] = '\0';
+    }
+    else
+    {
+        sprintf(message, "expected = %d, actual = %d", expected, actual);
+    }
+    PrintTestResult(pass, message);
+}
+
+
+void ExpectEqualDouble(double expected, double actual)
+{
+    char message[256];
+    bool pass = (expected == actual);
+    if (pass)
+    {
+        message[0] = '\0';
+    }
+    else
+    {
+        sprintf(message, "expected = %f, actual = %f", expected, actual);
+    }
+    PrintTestResult(pass, message);
+}
+
+
+void ExpectEqualString(const char* expected, const char* actual)
+{
+    char message[256];
+    bool pass = (strcmp(expected, actual) == 0);
+    if (pass)
+    {
+        message[0] = '\0';
+    }
+    else
+    {
+        sprintf(message, "expected = %s, actual = %s", expected, actual);
+    }
+    PrintTestResult(pass, message);
+}
+
+
+void ExpectNodeText(const char* expected, const JsonNode* actual)
 {
     char message[256];
     bool pass = (strlen(expected) == actual->length) &&(strncmp(expected, actual->source + actual->offset, actual->length) == 0);
@@ -93,7 +167,7 @@ void ExpectValidInteger(const char* source, const char* expected)
     ParseFirst(&object, &pair);
     GetValue(&pair, &value);
     ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString(expected, &value);
+    ExpectNodeText(expected, &value);
 }
 
 
@@ -125,7 +199,7 @@ void ExpectValidReal(const char* source, const char* expected)
     ParseFirst(&object, &pair);
     GetValue(&pair, &value);
     ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectEqualString(expected, &value);    
+    ExpectNodeText(expected, &value);    
 }
 
 
@@ -163,7 +237,7 @@ void ValidStringTest()
     Initialize("{\"String\":\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"}", &object);
     ParseFirst(&object, &pair);
     GetValue(&pair, &value);
-    ExpectEqualString("\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"", &value);
+    ExpectNodeText("\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"", &value);
 }
 
 
@@ -183,9 +257,47 @@ void InvalidStringTest()
 }
 
 
+void GetValueTest()
+{
+    JsonStatus status;
+    JsonNode object;
+    char* string;
+    double real;
+    int integer;
+    
+    Initialize("{\"Zero\":0,\"Integer\":99,\"Real\":-123.4,\"Mega\":1e9,\"Milli\":1E-3,\"String\":\"Text\"}", &object);
+    status = AllocateString(&object, "String", &string);
+    ExpectTrue(JSON_OK == status);
+    if (status == JSON_OK)
+    {
+        ExpectTrue(strcmp("Text", string) == 0);
+        free(string);
+    }
+    status = GetInt(&object, "Zero", &integer);
+    ExpectEqualInteger(0, integer);
+    status = GetInt(&object, "Integer", &integer);
+    ExpectEqualInteger(99, integer);
+    status = GetInt(&object, "Real", &integer);
+    ExpectEqualInteger(-123, integer);
+    status = GetInt(&object, "Mega", &integer);
+    ExpectEqualInteger(1000000000, integer);
+    status = GetInt(&object, "Milli", &integer);
+    ExpectEqualInteger(0, integer);
+    status = GetDouble(&object, "Zero", &real);
+    ExpectEqualDouble(0.0, real);
+    status = GetDouble(&object, "Integer", &real);
+    ExpectEqualDouble(99.0, real);
+    status = GetDouble(&object, "Real", &real);
+    ExpectEqualDouble(-123.4, real);
+    status = GetDouble(&object, "Mega", &real);
+    ExpectEqualDouble(1000000000.0, real);
+    status = GetDouble(&object, "Milli", &real);
+    ExpectEqualDouble(0.001, real);
+}
+
+
 int main(int argc, char** argv) {
-    printf("%%SUITE_STARTING%% JSON Parser Test\n");
-    printf("%%SUITE_STARTED%%\n");
+    StartSuite("JSON Parser Test");
 
     StartTest("ValidIntegerTest");
     ValidIntegerTest();
@@ -211,7 +323,11 @@ int main(int argc, char** argv) {
     InvalidStringTest();
     FinishTest();
 
-    printf("%%SUITE_FINISHED%% time=0\n");
+    StartTest("GetValueTest");
+    GetValueTest();
+    FinishTest();
+
+    FinishSuite();
 
     return (EXIT_SUCCESS);
 }
