@@ -12,6 +12,7 @@ typedef enum
     JSON_OBJECT_EXPECTED,
     JSON_NAME_NOT_PRESENT,
     JSON_TYPE_MISMATCH,
+    JSON_INVALID_STRING
 } JsonStatus;
 
 
@@ -50,9 +51,12 @@ void ParseNext(const JsonNode* sibling, JsonNode* next);
 
 void GetValue(const JsonNode* pair, JsonNode* value);
 
-JsonStatus AllocateString(JsonNode* object, const char* name, char** value);
-JsonStatus GetInt(JsonNode* object, const char* name, int* value);
-JsonStatus GetDouble(JsonNode* object, const char* name, double* value);
+JsonStatus AllocateString(const JsonNode* object, const char* name, char** value);
+JsonStatus GetDouble(const JsonNode* object, const char* name, double* value);
+JsonStatus GetFloat(const JsonNode* object, const char* name, float* value);
+JsonStatus GetInt(const JsonNode* object, const char* name, int* value);
+JsonStatus GetObject(const JsonNode* object, const char* name, JsonNode* value);
+JsonStatus GetArray(const JsonNode* object, const char* name, JsonNode* value);
 
 #endif	/* JSONPARSER_H */
 

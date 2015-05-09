@@ -1,5 +1,6 @@
 #include "JsonParser.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -457,16 +458,54 @@ void ScanFirstElement(const JsonNode* containerNode, JsonNode* elementNode)
 }
 
 
-//void ScanNextElement(const JsonNode* containerNode, const JsonNode* offsetNode, JsonNode* nextNode)
-//{
-//    JsonNode elementSeparatorNode;
-//    InitializeNode(nextNode, containerNode->source);
-//    ScanNext(offsetNode->source + offsetNode->offset + offsetNode->length, &elementSeparatorNode);
-//    if (elementSeparatorNode.type == JSON_ELEMENT_SEPARATOR)
-//    {
-//        ScanNext(containerNode->source + offsetNode->offset + offsetNode->length + elementSeparatorNode.offset + elementSeparatorNode.length, nextNode);
-//    }    
-//}
+JsonStatus FindPair(const JsonNode* object, const char* name, JsonNode* pair)
+{
+    if ((object != NULL) && (object->type == JSON_OBJECT))
+    {
+        ScanFirstPair(object, pair);
+        while (pair->type == JSON_PAIR)
+        {
+            JsonNode nameNode;
+            ScanNext(pair->source + pair->offset, &nameNode);
+            if (nameNode.type == JSON_STRING)
+            {
+                if (strncmp(name, nameNode.source + nameNode.offset + 1, nameNode.length - 2) == 0)
+                {
+                    return JSON_OK;
+                }
+            }
+            JsonNode nextNode;
+            ScanNextPair(pair, &nextNode);
+            *pair = nextNode;
+        }
+        return JSON_NAME_NOT_PRESENT;
+    }
+    else
+    {
+        return JSON_OBJECT_EXPECTED;
+    }
+}
+
+
+JsonStatus GetNode(const JsonNode* object, const char* name, JsonType type, JsonNode* value)
+{
+    JsonNode pair;
+    JsonStatus status = FindPair(object, name, &pair);
+    if (status == JSON_OK)
+    {
+        JsonNode node;
+        GetValue(&pair, &node);
+        if (node.type == type)
+        {
+            *value = node;
+        }
+        else
+        {
+            status = JSON_TYPE_MISMATCH;
+        }
+    }
+    return status;
+}
 
 
 /* 
@@ -525,90 +564,110 @@ void GetValue(const JsonNode* pair, JsonNode* value)
 }
 
 
-JsonStatus FindPair(const JsonNode* object, const char* name, JsonNode* pair)
+JsonStatus AllocateString(const JsonNode* object, const char* name, char** value)
 {
-    if ((object != NULL) && (object->type == JSON_OBJECT))
+    JsonNode node;
+    JsonStatus status = GetNode(object, name, JSON_STRING, &node);
+    if (status == JSON_OK)
     {
-        ScanFirstPair(object, pair);
-        while (pair->type == JSON_PAIR)
+        size_t i;
+        *value = malloc(node.length - 2);
+        size_t j = 0;
+        for (i = 1; (i < node.length - 1) && status == JSON_OK; ++i)
         {
-            JsonNode nameNode;
-            ScanNext(pair->source + pair->offset, &nameNode);
-            if (nameNode.type == JSON_STRING)
+            char character = *(node.source + node.offset + i);
+            if (character == '\\')
             {
-                if (strncmp(name, nameNode.source + nameNode.offset + 1, nameNode.length - 2) == 0)
+                i++;
+                char escaped = *(node.source + node.offset + i);
+                switch (escaped)
                 {
-                    return JSON_OK;
+                    case '\"':
+                    case '\\':
+                    case '/':
+                        character = escaped;
+                        break;
+                    case 'b':
+                        character = '\b';
+                        break;
+                    case 'f':
+                        character = '\f';
+                        break;
+                    case 'n':
+                        character = '\n';
+                        break;
+                    case 'r':
+                        character = '\t';
+                        break;
+                    case 't':
+                        character = '\t';
+                        break;
+                    case 'u': {
+                        char hex[5];
+                        int unicode;
+                        strncpy(hex, node.source + node.offset + i + 1, 4);
+                        hex[4] = '\0';
+                        sscanf(hex, "%x", &unicode);
+                        character = ((unicode <= 0xFF) && ! IsControl((char) unicode)) ? (char) unicode : 255;
+                        i += 4;
+                        break;
+                    }
+                    default: 
+                        status = JSON_INVALID_STRING;
                 }
             }
-            JsonNode nextNode;
-            ScanNextPair(pair, &nextNode);
-            *pair = nextNode;
+            (*value)[j] = character;
+            j++;
         }
-        return JSON_NAME_NOT_PRESENT;
-    }
-    else
-    {
-        return JSON_OBJECT_EXPECTED;
-    }
-}
-
-
-JsonStatus AllocateString(JsonNode* object, const char* name, char** value)
-{
-    JsonNode pair;
-    JsonStatus status = FindPair(object, name, &pair);
-    if (status == JSON_OK)
-    {
-        JsonNode node;
-        GetValue(&pair, &node);
-        if (node.type == JSON_STRING)
-        {
-            *value = malloc(node.length - 1);
-            strncpy(*value, node.source + node.offset + 1, node.length - 2);
-            (*value)[node.length - 2] = '\0';
-            status = JSON_OK;
-        }
-        else
-        {
-            status = JSON_TYPE_MISMATCH;
-        }
+        (*value)[j] = '\0';
     }
     return status;
 }
 
 
-JsonStatus GetInt(JsonNode* object, const char* name, int* value)
+JsonStatus GetDouble(const JsonNode* object, const char* name, double* value)
+{
+    JsonNode node;
+    JsonStatus status = GetNode(object, name, JSON_NUMBER, &node);
+    if (status == JSON_OK)
+    {
+        *value = atof(node.source + node.offset);
+    }
+    return status;
+}
+
+
+JsonStatus GetFloat(const JsonNode* object, const char* name, float* value)
 {
     double doubleValue;
     JsonStatus status = GetDouble(object, name, &doubleValue);
-    *value = (int) doubleValue;
-    return status;
-}
-
-
-JsonStatus GetDouble(JsonNode* object, const char* name, double* value)
-{
-    JsonNode pair;
-    JsonStatus status = FindPair(object, name, &pair);
     if (status == JSON_OK)
     {
-        JsonNode node;
-        GetValue(&pair, &node);
-        if (node.type == JSON_NUMBER)
-        {
-            *value = atof(node.source + node.offset);
-        }
+        *value = (float) doubleValue;
     }
     return status;
 }
 
 
-JsonStatus GetFloat(JsonNode* object, const char* name, float* value)
+JsonStatus GetInt(const JsonNode* object, const char* name, int* value)
 {
     double doubleValue;
     JsonStatus status = GetDouble(object, name, &doubleValue);
-    *value = (float) doubleValue;
+    if (status == JSON_OK)
+    {
+        *value = (int) doubleValue;
+    }
     return status;
 }
 
+
+JsonStatus GetObject(const JsonNode* object, const char* name, JsonNode* value)
+{
+    return GetNode(object, name, JSON_OBJECT, value);
+}
+
+
+JsonStatus GetArray(const JsonNode* object, const char* name, JsonNode* value)
+{
+    return GetNode(object, name, JSON_ARRAY, value);
+}

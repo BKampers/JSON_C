@@ -61,7 +61,8 @@ void PrintTestResult(bool pass, const char* message)
     {
         printf("%%TEST_FAILED%%");
     }
-    printf(" time=0 testname=");
+    printf(" time=0");
+    printf(" testname=");
     printf(testName);
     printf(" (JSON Parser Test)");
     if (strlen(message) > 0)
@@ -260,12 +261,12 @@ void InvalidStringTest()
 void GetValueTest()
 {
     JsonStatus status;
-    JsonNode object;
+    JsonNode object, sub;
     char* string;
     double real;
     int integer;
     
-    Initialize("{\"Zero\":0,\"Integer\":99,\"Real\":-123.4,\"Mega\":1e9,\"Milli\":1E-3,\"String\":\"Text\"}", &object);
+    Initialize("{\"Zero\":0,\"Integer\":99,\"Real\":-123.4,\"Mega\":1e9,\"Milli\":1E-3,\"String\":\"Text\",\"Empty\":{},\"Array\":[0,\"one\",{},[]]}", &object);
     status = AllocateString(&object, "String", &string);
     ExpectTrue(JSON_OK == status);
     if (status == JSON_OK)
@@ -293,6 +294,21 @@ void GetValueTest()
     ExpectEqualDouble(1000000000.0, real);
     status = GetDouble(&object, "Milli", &real);
     ExpectEqualDouble(0.001, real);
+    status = GetObject(&object, "Empty", &sub);
+    ExpectEqualInteger(JSON_OBJECT, sub.type);
+    status = GetArray(&object, "Array", &sub);
+    ExpectEqualInteger(JSON_ARRAY, sub.type);
+}
+
+
+void UnicodeTest()
+{
+    char* string;
+    JsonNode object;
+    Initialize("{\"Unicode\":\"\\u0041\\u0042\\u0043\\u005A\"}", &object);
+    AllocateString(&object, "Unicode", &string);
+    ExpectEqualString("ABCZ", string);
+    free(string);
 }
 
 
@@ -325,6 +341,10 @@ int main(int argc, char** argv) {
 
     StartTest("GetValueTest");
     GetValueTest();
+    FinishTest();
+
+    StartTest("UnicodeTest");
+    UnicodeTest();
     FinishTest();
 
     FinishSuite();
