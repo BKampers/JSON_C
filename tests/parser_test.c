@@ -242,22 +242,6 @@ void ValidStringTest()
 }
 
 
-void InvalidStringTest()
-{
-    JsonNode object;
-    Initialize("{\"invalid\":\"\\q\"}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
-    Initialize("{\"invalid\":\"\\u1\"}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
-    Initialize("{\"invalid\":\"\\u1a\"}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
-    Initialize("{\"invalid\":\"\\u1ae\"}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
-    Initialize("{\"invalid\":\"\\u1a2x\"}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
-}
-
-
 void GetValueTest()
 {
     JsonStatus status;
@@ -312,6 +296,21 @@ void UnicodeTest()
 }
 
 
+void ControlCharactersTest()
+{
+    char* string;
+    int i;
+    JsonNode object;
+    Initialize("{\"Controls\":\"\\u0001\\u0002\\u0003\\u0004\"}", &object);
+    AllocateString(&object, "Controls", &string);
+    for (i = 0; i < 4; ++i)
+    {
+        ExpectEqualInteger(i + 1, string[i]);
+    }
+    free(string);
+}
+
+
 void EscapeCharactersTest()
 {
     char* string;
@@ -320,6 +319,30 @@ void EscapeCharactersTest()
     AllocateString(&object, "Escaped", &string);
     ExpectEqualString("\"\\/\b\f\r\n\t", string);
     free(string);
+}
+
+
+void ExpectInvalidString(const char* source)
+{
+    JsonNode object;
+    char* string;
+    JsonStatus status;
+    Initialize(source, &object);
+    ExpectEqualInteger(JSON_OBJECT, object.type);
+    status = AllocateString(&object, "invalid", &string);
+    ExpectEqualInteger(JSON_INVALID_STRING, status);
+    free(string);
+    
+}
+
+
+void InvalidEscapeTest()
+{
+    ExpectInvalidString("{\"invalid\":\"\\q\"}");
+    ExpectInvalidString("{\"invalid\":\"\\u1\"}");
+    ExpectInvalidString("{\"invalid\":\"\\u1a\"}");
+    ExpectInvalidString("{\"invalid\":\"\\u1ae\"}");
+    ExpectInvalidString("{\"invalid\":\"\\u1a2x\"}");
 }
 
 
@@ -346,10 +369,6 @@ int main(int argc, char** argv) {
     ValidStringTest();
     FinishTest();
 
-    StartTest("InvalidStringTest");
-    InvalidStringTest();
-    FinishTest();
-
     StartTest("GetValueTest");
     GetValueTest();
     FinishTest();
@@ -358,8 +377,16 @@ int main(int argc, char** argv) {
     UnicodeTest();
     FinishTest();
 
+    StartTest("ControlCharactersTest");
+    ControlCharactersTest();
+    FinishTest();
+
     StartTest("EscapeCharactersTest");
     EscapeCharactersTest();
+    FinishTest();
+
+    StartTest("InvalidEscapeTest");
+    InvalidEscapeTest();
     FinishTest();
 
     FinishSuite();

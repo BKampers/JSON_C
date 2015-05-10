@@ -22,7 +22,6 @@
 
 
 const char* WHITE_SPACES = " \f\n\r\t";
-const char* ESCAPABLE_CHARACTERS = "\"\\/bfnrt";
 const char* NUMBER_CHARACTERS = ".+-Ee";
 
 
@@ -122,41 +121,6 @@ void ScanArray(JsonNode* node)
 }
 
 
-bool ScanUnicode(JsonNode* node)
-{
-    int i = 1;
-    while (i <= 4)
-    {
-        if (! isxdigit(*(node->source + node->offset + node->length + i)))
-        {
-            return FALSE;
-        }
-        i++;
-    }
-    node->length += 4;
-    return TRUE;
-}
-
-
-bool ScanEscape(JsonNode* node)
-{
-    char escapedCharacter = *(node->source + node->offset + node->length);
-    if (strchr(ESCAPABLE_CHARACTERS, escapedCharacter) != NULL)
-    {
-        node->length++;
-        return TRUE;
-    }
-    else if (escapedCharacter == UNICODE_CHARACTER)
-    {
-        return ScanUnicode(node);
-    }
-    else
-    {
-        return FALSE;
-    }
-}
-
-
 void ScanString(JsonNode* node)
 {
     bool scanning = TRUE;
@@ -169,7 +133,8 @@ void ScanString(JsonNode* node)
             node->length++;
             if (character == ESCAPE_CHARACTER)
             {
-                scanning = ScanEscape(node);
+                node->length++;
+//                scanning = ScanEscape(node);
             }
             else if (IsControl(character))
             {
@@ -598,7 +563,7 @@ JsonStatus ProcessUnicode(const JsonNode* node, int* index, char* character)
             status = JSON_INVALID_STRING;
         }
     }
-    *character = (unicode <= 0xFF) ? (char) unicode : 0xFF;
+    *character = ((0x00 < unicode) && (unicode < 0xFF)) ? (char) unicode : 0xFF;
     return status;
 }
 
