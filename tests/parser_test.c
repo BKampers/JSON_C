@@ -312,6 +312,17 @@ void UnicodeTest()
 }
 
 
+void EscapeCharactersTest()
+{
+    char* string;
+    JsonNode object;
+    Initialize("{\"Escaped\":\"\\\"\\\\\\/\\b\\f\\r\\n\\t\"}", &object);
+    AllocateString(&object, "Escaped", &string);
+    ExpectEqualString("\"\\/\b\f\r\n\t", string);
+    free(string);
+}
+
+
 int main(int argc, char** argv) {
     StartSuite("JSON Parser Test");
 
@@ -345,6 +356,10 @@ int main(int argc, char** argv) {
 
     StartTest("UnicodeTest");
     UnicodeTest();
+    FinishTest();
+
+    StartTest("EscapeCharactersTest");
+    EscapeCharactersTest();
     FinishTest();
 
     FinishSuite();

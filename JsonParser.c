@@ -564,6 +564,90 @@ void GetValue(const JsonNode* pair, JsonNode* value)
 }
 
 
+JsonStatus ProcessUnicode(const JsonNode* node, int* index, char* character)
+{
+    JsonStatus status = JSON_OK;
+    int unicode = 0;
+    int i;
+    for (i = 1; (i <= 4) && (status == JSON_OK); ++i)
+    {
+        (*index)++;
+        if (*index < node->length - 1)
+        {
+            char digit = *(node->source + node->offset + *index);
+            unicode <<= 4;
+            if (('0' <= digit) && (digit <= '9'))
+            {
+                unicode |= digit - '0';
+            }
+            else if (('A' <= digit) && (digit <= 'F'))
+            {
+                unicode |= digit - 'A' + 10;
+            }
+            else if (('a' <= digit) && (digit <= 'f'))
+            {
+                unicode |= digit - 'a' + 10;
+            }
+            else 
+            {
+                status = JSON_INVALID_STRING;
+            }
+        }
+        else
+        {
+            status = JSON_INVALID_STRING;
+        }
+    }
+    *character = (unicode <= 0xFF) ? (char) unicode : 0xFF;
+    return status;
+}
+
+
+JsonStatus ProcessEscapeCharacter(const JsonNode* node, int* index, char* character)
+{
+    JsonStatus status = JSON_OK;
+    (*index)++;
+    if (*index < node->length - 1)
+    {
+        char escaped = *(node->source + node->offset + *index);
+        switch (escaped)
+        {
+            case '\"':
+            case '\\':
+            case '/':
+                *character = escaped;
+                break;
+            case 'b':
+                *character = '\b';
+                break;
+            case 'f':
+                *character = '\f';
+                break;
+            case 'n':
+                *character = '\n';
+                break;
+            case 'r':
+                *character = '\r';
+                break;
+            case 't':
+                *character = '\t';
+                break;
+            case 'u':
+                status = ProcessUnicode(node, index, character);
+                break;
+            default: 
+                status = JSON_INVALID_STRING;
+                break;
+        }
+    }
+    else
+    {
+        status = JSON_INVALID_STRING;
+    }
+    return status;
+}
+
+
 JsonStatus AllocateString(const JsonNode* object, const char* name, char** value)
 {
     JsonNode node;
@@ -578,43 +662,7 @@ JsonStatus AllocateString(const JsonNode* object, const char* name, char** value
             char character = *(node.source + node.offset + i);
             if (character == '\\')
             {
-                i++;
-                char escaped = *(node.source + node.offset + i);
-                switch (escaped)
-                {
-                    case '\"':
-                    case '\\':
-                    case '/':
-                        character = escaped;
-                        break;
-                    case 'b':
-                        character = '\b';
-                        break;
-                    case 'f':
-                        character = '\f';
-                        break;
-                    case 'n':
-                        character = '\n';
-                        break;
-                    case 'r':
-                        character = '\t';
-                        break;
-                    case 't':
-                        character = '\t';
-                        break;
-                    case 'u': {
-                        char hex[5];
-                        int unicode;
-                        strncpy(hex, node.source + node.offset + i + 1, 4);
-                        hex[4] = '\0';
-                        sscanf(hex, "%x", &unicode);
-                        character = ((unicode <= 0xFF) && ! IsControl((char) unicode)) ? (char) unicode : 255;
-                        i += 4;
-                        break;
-                    }
-                    default: 
-                        status = JSON_INVALID_STRING;
-                }
+                status = ProcessEscapeCharacter(&node, &i, &character);
             }
             (*value)[j] = character;
             j++;
