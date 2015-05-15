@@ -23,9 +23,14 @@ char* currentTestName = NULL;
 #define EXPECT_STATUS(EXPECTED, ACTUAL) expectStatus(EXPECTED, ACTUAL, __LINE__)
 #define EXPECT_OK(ACTUAL) expectStatus(OK, ACTUAL, __LINE__)
 
-#define ASSERT_NOT_NULL(ACTUAL) EXPECT_NOT_NULL(ACTUAL); if (ACTUAL == NULL) {return;}
-#define ASSERT_EQUAL_INT(EXPECTED, ACTUAL) EXPECT_EQUAL_INT(EXPECTED, ACTUAL); if (EXPECTED != ACTUAL) {return;}
-#define ASSERT_EQUAL_STRING(EXPECTED, ACTUAL) if (EXPECT_EQUAL_STRING(EXPECTED, ACTUAL)) {return;}
+#define ASSERT_FALSE(ACTUAL) if (! EXPECT_FALSE(ACTUAL)) {return;}
+#define ASSERT_TRUE(ACTUAL) if (! EXPECT_TRUE(ACTUAL)) {return;}
+#define ASSERT_NULL(ACTUAL) if (! EXPECT_NULL(ACTUAL)) {return;}
+#define ASSERT_NOT_NULL(ACTUAL) if (! EXPECT_NOT_NULL(ACTUAL)) {return;}
+#define ASSERT_EQUAL_INT(EXPECTED, ACTUAL) if (! EXPECT_EQUAL_INT(EXPECTED, ACTUAL)) {return;}
+#define ASSERT_EQUAL_STRING(EXPECTED, ACTUAL) if (! EXPECT_EQUAL_STRING(EXPECTED, ACTUAL)) {return;}
+#define ASSERT_STATUS(EXPECTED, ACTUAL) if (! EXPECT_STATUS(EXPECTED, ACTUAL)) {return;}
+#define ASSERT_OK(ACTUAL) if (! EXPECT_OK(ACTUAL)) {return;}
 
 
 double timeSince(time_t time)
@@ -86,33 +91,39 @@ void printTestLine(bool pass, int line, char* message)
 }
 
 
-void expectTrue(bool actual, int line)
+bool expectTrue(bool actual, int line)
 {
-    printTestLine(actual, line, (actual) ? "TRUE" : "FALSE");
+    bool pass = actual != FALSE;
+    printTestLine(pass, line, (pass) ? "TRUE" : "FALSE");
+    return actual;
 }
 
 
-void expectFalse(bool actual, int line)
+bool expectFalse(bool actual, int line)
 {
-    printTestLine(! actual, line, (! actual) ? "FALSE" : "TRUE");
+    bool pass = actual == FALSE;
+    printTestLine(pass, line, (pass) ? "FALSE" : "TRUE");
+    return pass;
 }
 
 
-void expectNull(void* actual, int line)
+bool expectNull(void* actual, int line)
 {
     bool pass = (actual == NULL);
     printTestLine(pass, line, (pass) ? "NULL" : "NOT NULL");
+    return pass;
 }
 
 
-void expectNotNull(void* actual, int line)
+bool expectNotNull(void* actual, int line)
 {
     bool pass = (actual != NULL);
     printTestLine(pass, line,  (pass) ? "NOT NULL" : "NULL");
+    return pass;
 }
 
 
-void expectEqualInt(int expected, int actual, int line)
+bool expectEqualInt(int expected, int actual, int line)
 {
     char message[64];
     bool pass = (expected == actual);
@@ -124,7 +135,8 @@ void expectEqualInt(int expected, int actual, int line)
     {
         sprintf(message, "expected: %d, actual: %d", expected, actual);
     }
-    printTestLine(pass, line, message);    
+    printTestLine(pass, line, message);
+    return pass;
 }
 
 
@@ -145,7 +157,7 @@ bool expectEqualString(const char* expected, const char* actual, int line)
 }
 
 
-void expectStatus(Status expected, Status actual, int line)
+bool expectStatus(Status expected, Status actual, int line)
 {
     char message[64];
     bool pass = (expected == actual);
@@ -157,6 +169,7 @@ void expectStatus(Status expected, Status actual, int line)
     {
         sprintf(message, "expected: %s, actual: %s", expected, actual);
     }
+    return pass;
 }
 
 

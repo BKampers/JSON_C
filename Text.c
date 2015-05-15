@@ -26,7 +26,7 @@ void AppendString(StringBuffer* stringBuffer, const char* string)
 void AppendSubstring(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count)
 {
     stringBuffer->length += count;
-    if (stringBuffer->capacity < stringBuffer->length)
+    if (stringBuffer->capacity < stringBuffer->length + 1)
     {
         stringBuffer->capacity = (stringBuffer->length / STRING_BUFFER_INCREMENT + 1) * STRING_BUFFER_INCREMENT;
         if (stringBuffer->buffer == NULL)
