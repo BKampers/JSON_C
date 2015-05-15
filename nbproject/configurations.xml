@@ -5,8 +5,10 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>ApiStatus.h</itemPath>
+      <itemPath>JsonComposer.h</itemPath>
       <itemPath>JsonGenerator.h</itemPath>
       <itemPath>JsonParser.h</itemPath>
+      <itemPath>Text.h</itemPath>
       <itemPath>Types.h</itemPath>
       <itemPath>contiki-conf.h</itemPath>
       <itemPath>json.h</itemPath>
@@ -19,14 +21,22 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>ApiStatus.c</itemPath>
+      <itemPath>JsonComposer.c</itemPath>
       <itemPath>JsonGenerator.c</itemPath>
       <itemPath>JsonParser.c</itemPath>
+      <itemPath>Text.c</itemPath>
       <itemPath>main.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f2"
+                     displayName="JSON Composer Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/composer_test.c</itemPath>
+      </logicalFolder>
       <logicalFolder name="f1"
                      displayName="JSON Parser Test"
                      projectFiles="true"
@@ -68,6 +78,10 @@
       </item>
       <item path="ApiStatus.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="JsonComposer.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="JsonComposer.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="JsonGenerator.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="JsonGenerator.h" ex="false" tool="3" flavor2="0">
@@ -75,6 +89,10 @@
       <item path="JsonParser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="JsonParser.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Text.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="Text.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Types.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -95,9 +113,26 @@
           <output>${TESTDIR}/TestFiles/f1</output>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f2">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
+        </linkerTool>
+      </folder>
       <item path="json.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/composer_test.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="tests/parser_test.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -135,6 +170,10 @@
       </item>
       <item path="ApiStatus.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="JsonComposer.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="JsonComposer.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="JsonGenerator.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="JsonGenerator.h" ex="false" tool="3" flavor2="0">
@@ -142,6 +181,10 @@
       <item path="JsonParser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="JsonParser.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Text.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="Text.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Types.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -162,9 +205,26 @@
           <output>${TESTDIR}/TestFiles/f1</output>
         </linkerTool>
       </folder>
+      <folder path="TestFiles/f2">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
+        </linkerTool>
+      </folder>
       <item path="json.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/composer_test.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="tests/parser_test.c" ex="false" tool="0" flavor2="0">
       </item>

@@ -3,17 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "Text.h"
 
 #define CAPACITY_INCREMENT 8
-#define STRING_BUFFER_INCREMENT 64
-
-
-typedef struct 
-{
-    char* buffer;
-    size_t capacity;
-    size_t length;
-} StringBuffer;
 
 
 char NULL_LITERAL[] = "null";
@@ -22,54 +14,6 @@ char TRUE_LITERAL[] = "true";
 
 void ToObjectString(const JsonObject* object, StringBuffer* stringBuffer) ;
 void ToArraySring(const JsonArray* array, StringBuffer* stringBuffer);
-
-
-StringBuffer* CreateStringBuffer()
-{
-    StringBuffer* stringBuffer = malloc(sizeof(StringBuffer));
-    stringBuffer->buffer = NULL;
-    stringBuffer->capacity = 0;
-    stringBuffer->length = 0;
-    return stringBuffer;
-}
-
-
-void AppendStringBuffer(StringBuffer* stringBuffer, const char* string)
-{
-    stringBuffer->length += strlen(string);
-    while (stringBuffer->capacity <= stringBuffer->length)
-    {
-        stringBuffer->capacity += STRING_BUFFER_INCREMENT;
-        if (stringBuffer->buffer == NULL)
-        {
-            stringBuffer->buffer = malloc(stringBuffer->capacity * sizeof(char));
-            stringBuffer->buffer[0] = '\0';
-        }
-        else
-        {
-            stringBuffer->buffer = realloc(stringBuffer->buffer, stringBuffer->capacity * sizeof(char));
-        }
-    }
-    strcat(stringBuffer->buffer, string);
-    
-}
-
-
-char* DetachString(StringBuffer* stringBuffer)
-{
-    if (stringBuffer->buffer != NULL)
-    {
-        char* string = malloc(stringBuffer->length + 1);
-        strcpy(string, stringBuffer->buffer);
-        free(stringBuffer->buffer);
-        free(stringBuffer);
-        return string;
-    }
-    else
-    {
-        return NULL;
-    }
-}
 
 
 void AppendQuotedString(const char* string, StringBuffer* stringBuffer)

@@ -36,8 +36,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/ApiStatus.o \
+	${OBJECTDIR}/JsonComposer.o \
 	${OBJECTDIR}/JsonGenerator.o \
 	${OBJECTDIR}/JsonParser.o \
+	${OBJECTDIR}/Text.o \
 	${OBJECTDIR}/main.o
 
 # Test Directory
@@ -45,6 +47,7 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 
 # Test Files
 TESTFILES= \
+	${TESTDIR}/TestFiles/f2 \
 	${TESTDIR}/TestFiles/f1
 
 # C Compiler Flags
@@ -76,6 +79,11 @@ ${OBJECTDIR}/ApiStatus.o: ApiStatus.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ApiStatus.o ApiStatus.c
 
+${OBJECTDIR}/JsonComposer.o: JsonComposer.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -g -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/JsonComposer.o JsonComposer.c
+
 ${OBJECTDIR}/JsonGenerator.o: JsonGenerator.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -85,6 +93,11 @@ ${OBJECTDIR}/JsonParser.o: JsonParser.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/JsonParser.o JsonParser.c
+
+${OBJECTDIR}/Text.o: Text.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -g -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Text.o Text.c
 
 ${OBJECTDIR}/main.o: main.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -96,9 +109,19 @@ ${OBJECTDIR}/main.o: main.c
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/tests/composer_test.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.c}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} 
+
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/parser_test.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.c}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} 
+
+
+${TESTDIR}/tests/composer_test.o: tests/composer_test.c 
+	${MKDIR} -p ${TESTDIR}/tests
+	${RM} "$@.d"
+	$(COMPILE.c) -g -I. -I. -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/composer_test.o tests/composer_test.c
 
 
 ${TESTDIR}/tests/parser_test.o: tests/parser_test.c 
@@ -118,6 +141,19 @@ ${OBJECTDIR}/ApiStatus_nomain.o: ${OBJECTDIR}/ApiStatus.o ApiStatus.c
 	    $(COMPILE.c) -g -I. -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ApiStatus_nomain.o ApiStatus.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/ApiStatus.o ${OBJECTDIR}/ApiStatus_nomain.o;\
+	fi
+
+${OBJECTDIR}/JsonComposer_nomain.o: ${OBJECTDIR}/JsonComposer.o JsonComposer.c 
+	${MKDIR} -p ${OBJECTDIR}
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/JsonComposer.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -I. -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/JsonComposer_nomain.o JsonComposer.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/JsonComposer.o ${OBJECTDIR}/JsonComposer_nomain.o;\
 	fi
 
 ${OBJECTDIR}/JsonGenerator_nomain.o: ${OBJECTDIR}/JsonGenerator.o JsonGenerator.c 
@@ -146,6 +182,19 @@ ${OBJECTDIR}/JsonParser_nomain.o: ${OBJECTDIR}/JsonParser.o JsonParser.c
 	    ${CP} ${OBJECTDIR}/JsonParser.o ${OBJECTDIR}/JsonParser_nomain.o;\
 	fi
 
+${OBJECTDIR}/Text_nomain.o: ${OBJECTDIR}/Text.o Text.c 
+	${MKDIR} -p ${OBJECTDIR}
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/Text.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -I. -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Text_nomain.o Text.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/Text.o ${OBJECTDIR}/Text_nomain.o;\
+	fi
+
 ${OBJECTDIR}/main_nomain.o: ${OBJECTDIR}/main.o main.c 
 	${MKDIR} -p ${OBJECTDIR}
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/main.o`; \
@@ -163,6 +212,7 @@ ${OBJECTDIR}/main_nomain.o: ${OBJECTDIR}/main.o main.c
 .test-conf:
 	@if [ "${TEST}" = "" ]; \
 	then  \
+	    ${TESTDIR}/TestFiles/f2 || true; \
 	    ${TESTDIR}/TestFiles/f1 || true; \
 	else  \
 	    ./${TEST} || true; \

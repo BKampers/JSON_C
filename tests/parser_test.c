@@ -346,7 +346,8 @@ void InvalidEscapeTest()
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     StartSuite("JSON Parser Test");
 
     StartTest("ValidIntegerTest");

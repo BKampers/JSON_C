@@ -37,7 +37,7 @@ typedef enum
 
 typedef struct 
 {
-    const char* source;
+    char* source;
     JsonType type;
     size_t offset;
     size_t length;
@@ -57,6 +57,8 @@ JsonStatus GetFloat(const JsonNode* object, const char* name, float* value);
 JsonStatus GetInt(const JsonNode* object, const char* name, int* value);
 JsonStatus GetObject(const JsonNode* object, const char* name, JsonNode* value);
 JsonStatus GetArray(const JsonNode* object, const char* name, JsonNode* value);
+
+bool IsControl(char character);
 
 #endif	/* JSONPARSER_H */
 
