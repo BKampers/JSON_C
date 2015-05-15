@@ -35,6 +35,7 @@
                      displayName="JSON Composer Test"
                      projectFiles="true"
                      kind="TEST">
+        <itemPath>tests/Simple.h</itemPath>
         <itemPath>tests/composer_test.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
@@ -132,6 +133,8 @@
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
       </item>
+      <item path="tests/Simple.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="tests/composer_test.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="tests/parser_test.c" ex="false" tool="0" flavor2="0">
@@ -223,6 +226,8 @@
       <item path="json.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/Simple.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="tests/composer_test.c" ex="false" tool="0" flavor2="0">
       </item>

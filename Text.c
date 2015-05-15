@@ -17,33 +17,18 @@ StringBuffer* CreateStringBuffer()
 }
 
 
-void AppendStringBuffer(StringBuffer* stringBuffer, const char* string)
+void AppendString(StringBuffer* stringBuffer, const char* string)
 {
-    AppendSubstringBuffer(stringBuffer, string, 0, strlen(string));
-//    stringBuffer->length += strlen(string);
-//    while (stringBuffer->capacity <= stringBuffer->length)
-//    {
-//        stringBuffer->capacity += STRING_BUFFER_INCREMENT;
-//        if (stringBuffer->buffer == NULL)
-//        {
-//            stringBuffer->buffer = malloc(stringBuffer->capacity * sizeof(char));
-//            stringBuffer->buffer[0] = '\0';
-//        }
-//        else
-//        {
-//            stringBuffer->buffer = realloc(stringBuffer->buffer, stringBuffer->capacity * sizeof(char));
-//        }
-//    }
-//    strcat(stringBuffer->buffer, string);    
+    AppendSubstring(stringBuffer, string, 0, strlen(string));
 }
 
 
-void AppendSubstringBuffer(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count)
+void AppendSubstring(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count)
 {
     stringBuffer->length += count;
-    while (stringBuffer->capacity <= stringBuffer->length)
+    if (stringBuffer->capacity < stringBuffer->length)
     {
-        stringBuffer->capacity += STRING_BUFFER_INCREMENT;
+        stringBuffer->capacity = (stringBuffer->length / STRING_BUFFER_INCREMENT + 1) * STRING_BUFFER_INCREMENT;
         if (stringBuffer->buffer == NULL)
         {
             stringBuffer->buffer = malloc(stringBuffer->capacity * sizeof(char));
@@ -55,6 +40,12 @@ void AppendSubstringBuffer(StringBuffer* stringBuffer, const char* string, size_
         }
     }
     strncat(stringBuffer->buffer, string + offset, count);    
+}
+
+
+void AppendCharacter(StringBuffer* stringBuffer, char character)
+{
+    AppendSubstring(stringBuffer, &character, 0 , 1);
 }
 
 

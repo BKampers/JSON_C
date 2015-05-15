@@ -18,9 +18,9 @@ void ToArraySring(const JsonArray* array, StringBuffer* stringBuffer);
 
 void AppendQuotedString(const char* string, StringBuffer* stringBuffer)
 {
-    AppendStringBuffer(stringBuffer, "\"");
-    AppendStringBuffer(stringBuffer, string);
-    AppendStringBuffer(stringBuffer, "\"");
+    AppendString(stringBuffer, "\"");
+    AppendString(stringBuffer, string);
+    AppendString(stringBuffer, "\"");
 }
 
 
@@ -34,7 +34,7 @@ void AppendValueString(const JsonValue* value, StringBuffer* stringBuffer)
         case JSON_NUMBER:
         case JSON_BOOLEAN:
         case JSON_NULL:
-            AppendStringBuffer(stringBuffer, (char*) value->data);
+            AppendString(stringBuffer, (char*) value->data);
             break;
         case JSON_OBJECT:
             ToObjectString((JsonObject*) value->data, stringBuffer);
@@ -49,35 +49,35 @@ void AppendValueString(const JsonValue* value, StringBuffer* stringBuffer)
 void ToObjectString(const JsonObject* object, StringBuffer* stringBuffer) 
 {
     int i;
-    AppendStringBuffer(stringBuffer, "{");
+    AppendString(stringBuffer, "{");
     for (i = 0; i < object->elementCount; ++i)
     {
         JsonPair* pair = &(object->elements[i]);
         if (i > 0)
         {
-            AppendStringBuffer(stringBuffer, ",");
+            AppendString(stringBuffer, ",");
         }
         AppendQuotedString(pair->name, stringBuffer);
-        AppendStringBuffer(stringBuffer, ":");
+        AppendString(stringBuffer, ":");
         AppendValueString(&(pair->value), stringBuffer);
     }
-    AppendStringBuffer(stringBuffer, "}");
+    AppendString(stringBuffer, "}");
 }
 
  
 void ToArraySring(const JsonArray* array, StringBuffer* stringBuffer)
 {
     int i;
-    AppendStringBuffer(stringBuffer, "[");
+    AppendString(stringBuffer, "[");
     for (i = 0; i < array->elementCount; ++i)
     {
         if (i > 0)
         {
-            AppendStringBuffer(stringBuffer, ",");
+            AppendString(stringBuffer, ",");
         }
         AppendValueString(&(array->elements[i]), stringBuffer);
     }
-    AppendStringBuffer(stringBuffer, "]");    
+    AppendString(stringBuffer, "]");    
 }
 
 

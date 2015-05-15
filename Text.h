@@ -10,8 +10,9 @@ typedef struct
 
 
 StringBuffer* CreateStringBuffer();
-void AppendStringBuffer(StringBuffer* stringBuffer, const char* string);
-void AppendSubstringBuffer(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count);
+void AppendString(StringBuffer* stringBuffer, const char* string);
+void AppendSubstring(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count);
+void AppendCharacter(StringBuffer* stringBuffer, char character);
 char* DetachString(StringBuffer* stringBuffer);
 
 

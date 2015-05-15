@@ -25,6 +25,7 @@ char* currentTestName = NULL;
 
 #define ASSERT_NOT_NULL(ACTUAL) EXPECT_NOT_NULL(ACTUAL); if (ACTUAL == NULL) {return;}
 #define ASSERT_EQUAL_INT(EXPECTED, ACTUAL) EXPECT_EQUAL_INT(EXPECTED, ACTUAL); if (EXPECTED != ACTUAL) {return;}
+#define ASSERT_EQUAL_STRING(EXPECTED, ACTUAL) if (EXPECT_EQUAL_STRING(EXPECTED, ACTUAL)) {return;}
 
 
 double timeSince(time_t time)
@@ -127,9 +128,9 @@ void expectEqualInt(int expected, int actual, int line)
 }
 
 
-void expectEqualString(const char* expected, const char* actual, int line)
+bool expectEqualString(const char* expected, const char* actual, int line)
 {
-    char message[64];
+    char message[1024];
     bool pass = (strcmp(expected, actual) == 0);
     if (pass)
     {
@@ -139,7 +140,8 @@ void expectEqualString(const char* expected, const char* actual, int line)
     {
         sprintf(message, "expected: %s, actual: %s", expected, actual);
     }
-    printTestLine(pass, line, message);    
+    printTestLine(pass, line, message);
+    return pass;
 }
 
 
