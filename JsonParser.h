@@ -44,7 +44,7 @@ typedef struct
 } JsonNode;
 
 
-void Initialize(const char* source, JsonNode* node);
+void Initialize(char* source, JsonNode* node);
 
 void ParseFirst(const JsonNode* parent, JsonNode* first);
 void ParseNext(const JsonNode* sibling, JsonNode* next);
@@ -58,7 +58,7 @@ JsonStatus GetInt(const JsonNode* object, const char* name, int* value);
 JsonStatus GetObject(const JsonNode* object, const char* name, JsonNode* value);
 JsonStatus GetArray(const JsonNode* object, const char* name, JsonNode* value);
 
-bool IsControl(char character);
+bool IsUnicodeControl(char character);
 
 #endif	/* JSONPARSER_H */
 

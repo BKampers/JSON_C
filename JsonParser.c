@@ -25,7 +25,7 @@ const char* WHITE_SPACES = " \f\n\r\t";
 const char* NUMBER_CHARACTERS = ".+-Ee";
 
 
-void InitializeNode(JsonNode* node, const char* source)
+void InitializeNode(JsonNode* node, char* source)
 {
     node->source = source;
     node->type = JSON_INVALID;
@@ -40,7 +40,7 @@ bool IsWhiteSpace(char character)
 }
 
 
-bool IsControl(char character)
+bool IsUnicodeControl(char character)
 {
     return (character <= (char) 0x1F) || ((char) 0x7F <= character) && (character <= (char) 0x9F);
 }
@@ -61,10 +61,8 @@ bool IsValue(const JsonNode* node)
 }
 
 
-void ScanNext(const char* source, JsonNode* node);
-//void ScanFirstPair(const JsonNode* objectNode, JsonNode* pairNode);
-//void ScanNextPair(const JsonNode* objectNode, const JsonNode* offsetPairNode, JsonNode* nextPairNode);
-void ScanPair(const char* source, size_t offset, JsonNode* pairNode);
+void ScanNext(char* source, JsonNode* node);
+void ScanPair(char* source, size_t offset, JsonNode* pairNode);
 
 
 void ScanObject(JsonNode* node)
@@ -136,7 +134,7 @@ void ScanString(JsonNode* node)
                 node->length++;
 //                scanning = ScanEscape(node);
             }
-            else if (IsControl(character))
+            else if (IsUnicodeControl(character))
             {
                 scanning = FALSE;
             }
@@ -323,7 +321,7 @@ void ScanNumber(JsonNode* node)
 }
 
 
-void ScanNext(const char* source, JsonNode* node)
+void ScanNext(char* source, JsonNode* node)
 {
     char character;
     InitializeNode(node, source);
@@ -371,7 +369,7 @@ void ScanNext(const char* source, JsonNode* node)
 }
 
 
-void ScanPair(const char* source, size_t offset, JsonNode* pairNode)
+void ScanPair(char* source, size_t offset, JsonNode* pairNode)
 {
     JsonNode nameNode;
     ScanNext(source + offset, &nameNode);
@@ -477,7 +475,7 @@ JsonStatus GetNode(const JsonNode* object, const char* name, JsonType type, Json
 ** Interface
 */
 
-void Initialize(const char* source, JsonNode* node)
+void Initialize(char* source, JsonNode* node)
 {
     ScanNext(source, node);
 }

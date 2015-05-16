@@ -21,7 +21,7 @@ void AppendQuoted(StringBuffer* buffer, const char* string)
     for (i = 0; i < length; ++i)
     {
         char character = string[i];
-        if (IsControl(character))
+        if (IsUnicodeControl(character))
         {
             switch (character)
             {
