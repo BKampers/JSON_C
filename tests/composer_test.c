@@ -31,6 +31,7 @@ void ObjectTest()
     status = PutNullMember(&object, "Null");
     ASSERT_EQUAL_INT(JSON_OK, status);
     EXPECT_EQUAL_STRING("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false,\"True\":true,\"Null\":null}", object.source);
+    free(object.source);
 }
 
 

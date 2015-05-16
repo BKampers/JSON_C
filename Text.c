@@ -60,16 +60,16 @@ TextStatus AppendCharacter(StringBuffer* stringBuffer, char character)
 
 char* DetachString(StringBuffer* stringBuffer)
 {
+    char* string = NULL;
     if (stringBuffer->buffer != NULL)
     {
-        char* string = malloc(stringBuffer->length + 1);
-        strcpy(string, stringBuffer->buffer);
-        free(stringBuffer->buffer);
-        free(stringBuffer);
-        return string;
+        string = malloc(stringBuffer->length + 1);
+        if (string != NULL)
+        {
+            strcpy(string, stringBuffer->buffer);
+            free(stringBuffer->buffer);
+            InitializeStringBuffer(stringBuffer);
+        }
     }
-    else
-    {
-        return NULL;
-    }
+    return string;
 }
