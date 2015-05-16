@@ -9,13 +9,16 @@
 void AppendTest()
 {
     StringBuffer buffer;
+    TextStatus status;
     char* string;
     InitializeStringBuffer(&buffer);
-    AppendString(&buffer, "Buffer");
+    status = AppendString(&buffer, "Buffer");
+    ASSERT_EQUAL_INT(TEXT_OK, status);
     EXPECT_EQUAL_INT(6, buffer.length);
     EXPECT_EQUAL_INT(64, buffer.capacity);
     ASSERT_EQUAL_STRING("Buffer", buffer.buffer);
-    AppendString(&buffer, " test");
+    status = AppendString(&buffer, " test");
+    ASSERT_EQUAL_INT(TEXT_OK, status);
     EXPECT_EQUAL_INT(11, buffer.length);
     EXPECT_EQUAL_INT(64, buffer.capacity);
     ASSERT_EQUAL_STRING("Buffer test", buffer.buffer);
@@ -28,14 +31,17 @@ void AppendTest()
 void LongTextTest()
 {
     StringBuffer buffer;
+    TextStatus status;
     char* longString = malloc(65);
     memset(longString, '.', 64);
     longString[64] = '\0';
     InitializeStringBuffer(&buffer);
-    AppendString(&buffer, longString);
+    status = AppendString(&buffer, longString);
+    ASSERT_EQUAL_INT(TEXT_OK, status);
     ASSERT_EQUAL_INT(64, buffer.length);
     ASSERT_EQUAL_INT(64 * 2, buffer.capacity);
-    AppendString(&buffer, longString);
+    status = AppendString(&buffer, longString);
+    ASSERT_EQUAL_INT(TEXT_OK, status);
     EXPECT_EQUAL_INT(128, buffer.length);
     EXPECT_EQUAL_INT(64 * 3, buffer.capacity);
     free(buffer.buffer);
@@ -45,9 +51,11 @@ void LongTextTest()
 void AppendSubstringTest()
 {
     StringBuffer buffer;
+    TextStatus status;
     char* string;
     InitializeStringBuffer(&buffer);
-    AppendSubstring(&buffer, "Buffer", 2, 2);
+    status = AppendSubstring(&buffer, "Buffer", 2, 2);
+    ASSERT_EQUAL_INT(TEXT_OK, status);
     EXPECT_EQUAL_INT(2, buffer.length);
     string = DetachString(&buffer);
     EXPECT_EQUAL_STRING("ff", string);
@@ -58,10 +66,13 @@ void AppendSubstringTest()
 void AppendCharacterTest()
 {
     StringBuffer buffer;
+    TextStatus status;
     char* string;
     InitializeStringBuffer(&buffer);
-    AppendString(&buffer, "Buffer");
-    AppendCharacter(&buffer, '.');
+    status = AppendString(&buffer, "Buffer");
+    ASSERT_EQUAL_INT(TEXT_OK, status);
+    status = AppendCharacter(&buffer, '.');
+    ASSERT_EQUAL_INT(TEXT_OK, status);
     EXPECT_EQUAL_INT(7, buffer.length);
     string = DetachString(&buffer);
     EXPECT_EQUAL_STRING("Buffer.", string);

@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Types.h"
+
 #include "Text.h"
 
 
@@ -15,35 +17,44 @@ void InitializeStringBuffer(StringBuffer* stringBuffer)
 }
 
 
-void AppendString(StringBuffer* stringBuffer, const char* string)
+TextStatus AppendString(StringBuffer* stringBuffer, const char* string)
 {
-    AppendSubstring(stringBuffer, string, 0, strlen(string));
+    return AppendSubstring(stringBuffer, string, 0, strlen(string));
 }
 
 
-void AppendSubstring(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count)
+TextStatus AppendSubstring(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count)
 {
+    bool empty = stringBuffer->buffer == NULL;
     stringBuffer->length += count;
     if (stringBuffer->capacity < stringBuffer->length + 1)
     {
         stringBuffer->capacity = (stringBuffer->length / STRING_BUFFER_INCREMENT + 1) * STRING_BUFFER_INCREMENT;
-        if (stringBuffer->buffer == NULL)
+        stringBuffer->buffer = realloc(stringBuffer->buffer, stringBuffer->capacity * sizeof(char));
+    }
+    if (stringBuffer->buffer != NULL)
+    {
+        if (empty)
         {
-            stringBuffer->buffer = malloc(stringBuffer->capacity * sizeof(char));
-            stringBuffer->buffer[0] = '\0';
+            strncpy(stringBuffer->buffer, string + offset, count);
+            stringBuffer->buffer[count] = '\0';
         }
         else
         {
-            stringBuffer->buffer = realloc(stringBuffer->buffer, stringBuffer->capacity * sizeof(char));
+            strncat(stringBuffer->buffer, string + offset, count);    
         }
+        return TEXT_OK;
     }
-    strncat(stringBuffer->buffer, string + offset, count);    
+    else
+    {
+        return TEXT_OUT_OF_MEMORY;
+    }    
 }
 
 
-void AppendCharacter(StringBuffer* stringBuffer, char character)
+TextStatus AppendCharacter(StringBuffer* stringBuffer, char character)
 {
-    AppendSubstring(stringBuffer, &character, 0 , 1);
+    return AppendSubstring(stringBuffer, &character, 0 , 1);
 }
 
 

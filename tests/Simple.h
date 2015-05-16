@@ -143,7 +143,7 @@ bool expectEqualInt(int expected, int actual, int line)
 bool expectEqualString(const char* expected, const char* actual, int line)
 {
     char message[1024];
-    bool pass = (strcmp(expected, actual) == 0);
+    bool pass = (expected != NULL) && (actual != NULL) && (strcmp(expected, actual) == 0);
     if (pass)
     {
         sprintf(message, "%s", actual);
