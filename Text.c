@@ -7,13 +7,11 @@
 #define STRING_BUFFER_INCREMENT 64
 
 
-StringBuffer* CreateStringBuffer()
+void InitializeStringBuffer(StringBuffer* stringBuffer)
 {
-    StringBuffer* stringBuffer = malloc(sizeof(StringBuffer));
     stringBuffer->buffer = NULL;
     stringBuffer->capacity = 0;
     stringBuffer->length = 0;
-    return stringBuffer;
 }
 
 

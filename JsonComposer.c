@@ -66,29 +66,30 @@ JsonStatus PutMember(JsonNode* object, const char* name, const char* value, bool
 {
     if ((object != NULL) && (object->type == JSON_OBJECT))
     {
-        StringBuffer* buffer = CreateStringBuffer();
+        StringBuffer buffer;
+        InitializeStringBuffer(&buffer);
         bool empty = object->source == EMPTY_OBJECT_SOURCE;
-        AppendSubstring(buffer, object->source, 0, strlen(object->source) - 1);
+        AppendSubstring(&buffer, object->source, 0, strlen(object->source) - 1);
         if (! empty)
         {
-            AppendCharacter(buffer, ',');
+            AppendCharacter(&buffer, ',');
         }
-        AppendQuoted(buffer,  name);
-        AppendCharacter(buffer, ':');
+        AppendQuoted(&buffer,  name);
+        AppendCharacter(&buffer, ':');
         if (quoted)
         {
-            AppendQuoted(buffer,  value);
+            AppendQuoted(&buffer,  value);
         }
         else
         {
-            AppendString(buffer, value);
+            AppendString(&buffer, value);
         }
-        AppendCharacter(buffer, '}');
+        AppendCharacter(&buffer, '}');
         if (! empty)
         {
             free(object->source);
         }
-        object->source = DetachString(buffer);
+        object->source = DetachString(&buffer);
         return JSON_OK;
     }
     else

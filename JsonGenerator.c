@@ -285,7 +285,8 @@ void AddNull(JsonArray* array)
 
 char* ToString(const JsonObject* object)
 {
-    StringBuffer* stringBuffer = CreateStringBuffer();
-    ToObjectString(object, stringBuffer);
-    return DetachString(stringBuffer);
+    StringBuffer stringBuffer;
+    InitializeStringBuffer(&stringBuffer);
+    ToObjectString(object, &stringBuffer);
+    return DetachString(&stringBuffer);
 }
