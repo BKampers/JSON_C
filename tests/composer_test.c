@@ -53,6 +53,75 @@ void ControlCharactersTest()
 }
 
 
+void PutObjectTest()
+{
+    JsonNode object, member;
+    JsonStatus status = ComposeObject(&object);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = ComposeObject(&member);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = PutObjectMember(&object, "Object", &member);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_STRING("{\"Object\":{}}", object.source);
+    free(member.source);
+    free(object.source);
+}
+
+
+void ArrayTest()
+{
+    JsonNode array, element;
+    JsonStatus status = ComposeArray(&array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(JSON_ARRAY, array.type);
+    ASSERT_EQUAL_STRING("[]", array.source);
+    status = ComposeObject(&element);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = AddObjectElement(&array, &element);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_STRING("[{}]", array.source);
+    status = AddStringElement(&array, "String");
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_STRING("[{},\"String\"]", array.source);
+    free(element.source);
+    free(array.source);
+}
+
+
+void ArrayNumbersTest()
+{
+    JsonNode array;
+    JsonStatus status = ComposeArray(&array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(JSON_ARRAY, array.type);
+    ASSERT_EQUAL_STRING("[]", array.source);
+    status = AddIntegerElement(&array, 1234567890);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = AddRealElement(&array, 0.123456789);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_STRING("[1234567890,0.123456789]", array.source);
+    free(array.source);
+}
+
+
+void ArrayLiteralsTest()
+{
+    JsonNode array;
+    JsonStatus status = ComposeArray(&array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(JSON_ARRAY, array.type);
+    ASSERT_EQUAL_STRING("[]", array.source);
+    status = AddBooleanElement(&array, TRUE);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = AddBooleanElement(&array, FALSE);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = AddNullElement(&array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_STRING("[true,false,null]", array.source);
+    free(array.source);
+}
+
+
 int main(int argc, char** argv)
 {
     startSuite("Composer test");
@@ -63,6 +132,22 @@ int main(int argc, char** argv)
     
     start("ControlCharactersTest");
     ControlCharactersTest();
+    finish();
+    
+    start("PutObjectTest");
+    PutObjectTest();
+    finish();
+    
+    start("ArrayTest");
+    ArrayTest();
+    finish();
+
+    start("ArrayNumbersTest");
+    ArrayNumbersTest();
+    finish();
+
+    start("ArrayLiteralsTest");
+    ArrayLiteralsTest();
     finish();
     
     finishSuite();

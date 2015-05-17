@@ -4,11 +4,20 @@
 #include "JsonParser.h"
 
 JsonStatus ComposeObject(JsonNode* object);
+JsonStatus PutObjectMember(JsonNode* object, const char* name, const JsonNode* value);
 JsonStatus PutStringMember(JsonNode* object, const char* name, const char* value);
 JsonStatus PutIntegerMember(JsonNode* object, const char* name, long value);
 JsonStatus PutRealMember(JsonNode* object, const char* name, double value);
 JsonStatus PutBooleanMember(JsonNode* object, const char* name, bool value);
 JsonStatus PutNullMember(JsonNode* object, const char* name);
+
+JsonStatus ComposeArray(JsonNode* array);
+JsonStatus AddObjectElement(JsonNode* array, const JsonNode* element);
+JsonStatus AddStringElement(JsonNode* array, const char* element);
+JsonStatus AddIntegerElement(JsonNode* array, const long value);
+JsonStatus AddRealElement(JsonNode* array, const double value);
+JsonStatus AddBooleanElement(JsonNode* array, const bool value);
+JsonStatus AddNullElement(JsonNode* array);
 
 #endif	/* __JSONCOMPOSER_H__ */
 
