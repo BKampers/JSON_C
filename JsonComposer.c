@@ -8,6 +8,17 @@
 
 #define EMPTY_SOURCE_SIZE 3
 
+
+typedef enum
+{
+    LITERAL,
+    STRING,
+    INTEGER,
+    REAL,
+    NODE
+} ValueType;
+
+
 char JSON_NULL_LITERAL[] = "null";
 char JSON_FALSE_LITERAL[] = "false";
 char JSON_TRUE_LITERAL[] = "true";
@@ -17,118 +28,180 @@ char* EMPTY_OBJECT_SOURCE = "{}";
 char* EMPTY_ARRAY_SOURCE = "[]";
 
 
-
-void AppendQuoted(StringBuffer* buffer, const char* string)
+bool IsEmpty(const JsonNode* node)
 {
-    size_t i;
+    return
+        (node->type == JSON_OBJECT) && (strcmp(node->source, EMPTY_OBJECT_SOURCE) == 0) ||
+        (node->type == JSON_ARRAY) && (strcmp(node->source, EMPTY_ARRAY_SOURCE) == 0);
+}
+
+
+TextStatus PrepareBuffer(StringBuffer* buffer, const JsonNode* node)
+{
+    TextStatus status;
+    InitializeStringBuffer(buffer);
+    status = AppendSubstring(buffer, node->source, 0, strlen(node->source) - 1);
+    if ((status == TEXT_OK) && ! IsEmpty(node))
+    {
+        status = AppendCharacter(buffer, ',');
+    }
+    return status;
+}
+
+
+TextStatus AppendUnicode(StringBuffer* buffer, char character)
+{
+    char unicode[7];
+    sprintf(unicode, "\\u%04x", character);
+    return AppendString(buffer, unicode);
+}
+
+
+TextStatus AppendControlCharacter(StringBuffer* buffer, char character)
+{
+    switch (character)
+    {
+        case '\b':
+            return AppendString(buffer, "\\b");
+        case '\f':
+            return AppendString(buffer, "\\f");
+        case '\r':
+            return AppendString(buffer, "\\r");
+        case '\n':
+            return AppendString(buffer, "\\n");
+        case '\t':
+            return AppendString(buffer, "\\t");
+        default:
+            return AppendUnicode(buffer, character);
+    }
+}
+
+
+TextStatus AppendQuoted(StringBuffer* buffer, const char* string)
+{
     size_t length = strlen(string);
-    AppendCharacter(buffer, '\"');
-    for (i = 0; i < length; ++i)
+    size_t i = 0;
+    TextStatus status = AppendCharacter(buffer, '\"');
+    while ((i < length) && (status == TEXT_OK))
     {
         char character = string[i];
         if (IsUnicodeControl(character))
         {
-            switch (character)
-            {
-                case '\b':
-                    AppendString(buffer, "\\b");
-                    break;
-                case '\f':
-                    AppendString(buffer, "\\f");
-                    break;
-                case '\r':
-                    AppendString(buffer, "\\r");
-                    break;
-                case '\n':
-                    AppendString(buffer, "\\n");
-                    break;
-                case '\t':
-                    AppendString(buffer, "\\t");
-                    break;
-                default:
-                {
-                    char u[7];
-                    sprintf(u, "\\u%04x", character);
-                    AppendString(buffer, u);
-                    break;
-                }
-            }
+            status = AppendControlCharacter(buffer, character);
         }
         else if (character == '\"')
         {
-            AppendString(buffer, "\\\"");
+            status = AppendString(buffer, "\\\"");
         }
         else
         {
-            AppendCharacter(buffer, character);
+            status = AppendCharacter(buffer, character);
         }
+        i++;
     }
-    AppendCharacter(buffer, '\"');
+    if (status == TEXT_OK)
+    {
+        status = AppendCharacter(buffer, '\"');
+    }
+    return status;
 }
 
 
-JsonStatus PutMember(JsonNode* object, const char* name, const char* value, bool quoted)
+TextStatus AppendName(StringBuffer* buffer, const char* name)
 {
-    if ((object != NULL) && (object->type == JSON_OBJECT))
+    TextStatus status = AppendQuoted(buffer, name);
+    if (status == TEXT_OK)
     {
-        StringBuffer buffer;
-        InitializeStringBuffer(&buffer);
-        bool empty = strcmp(object->source, EMPTY_OBJECT_SOURCE) == 0;
-        AppendSubstring(&buffer, object->source, 0, strlen(object->source) - 1);
-        if (! empty)
-        {
-            AppendCharacter(&buffer, ',');
-        }
-        AppendQuoted(&buffer,  name);
-        AppendCharacter(&buffer, ':');
-        if (quoted)
-        {
-            AppendQuoted(&buffer,  value);
-        }
-        else
-        {
-            AppendString(&buffer, value);
-        }
-        AppendCharacter(&buffer, '}');
-        free(object->source);
-        object->source = DetachString(&buffer);
-        return JSON_OK;
+        status = AppendCharacter(buffer, ':');
     }
-    else
+    return status;
+}
+
+
+TextStatus AppendValue(StringBuffer* buffer, const void* value, ValueType type)
+{
+    switch (type)
     {
-        return JSON_OBJECT_EXPECTED;
+        case REAL:
+        {
+            char string[32];
+            sprintf(string, "%.15g", *((double*) value));
+            return AppendString(buffer, string);
+        }
+        case INTEGER:
+        {
+            char string[16];
+            sprintf(string, "%d", *((long*) value));
+            return AppendString(buffer, string);
+        }
+        case STRING:
+        {
+            return AppendQuoted(buffer, (const char*) value);
+        }
+        case NODE:
+        {
+            return AppendSubstring(buffer, ((JsonNode*) value)->source, ((JsonNode*) value)->offset, ((JsonNode*) value)->length);
+        }
+        case LITERAL:
+        {
+            return AppendString(buffer, (const char*) value);
+        }
     }
 }
 
 
-JsonStatus AddArrayElement(JsonNode* array, const char* elementString, size_t length, bool quoted)
+TextStatus BuildBuffer(StringBuffer* buffer, JsonNode* node, const char* name, const void* value, ValueType type)
 {
-    if ((array != NULL) && (array->type == JSON_ARRAY))
+    TextStatus status = PrepareBuffer(buffer, node);
+    if ((status == TEXT_OK) && (name != NULL))
     {
-        StringBuffer buffer;
-        InitializeStringBuffer(&buffer);
-        AppendSubstring(&buffer, array->source, 0, strlen(array->source) - 1);
-        if (strcmp(array->source, EMPTY_ARRAY_SOURCE) != 0)
-        {
-            AppendCharacter(&buffer, ',');
-        }
-        if (quoted)
-        {
-            AppendQuoted(&buffer, elementString);
-        }
-        else
-        {
-            AppendSubstring(&buffer, elementString, 0, length);
-        }
-        AppendCharacter(&buffer, ']');
-        free(array->source);
-        array->source = DetachString(&buffer);
-        return JSON_OK;
+        status = AppendName(buffer, name);
+    }
+    if (status == TEXT_OK)
+    {
+        status = AppendValue(buffer, value, type);
+    }
+    if (status == TEXT_OK)
+    {
+        status = AppendCharacter(buffer, (node->type == JSON_OBJECT) ? '}' : ']');
+    }
+    return status;
+}
+
+
+JsonStatus AddToNode(JsonNode* node, const char* name, const void* value, ValueType type)
+{
+    JsonStatus jsonStatus;
+    if (node == NULL)
+    {
+        jsonStatus = JSON_INVALID_PARAMETER;
+    }
+    else if ((name != NULL) && (node->type != JSON_OBJECT))
+    {
+        jsonStatus = JSON_OBJECT_EXPECTED;
+    }
+    else if ((name == NULL) && (node->type != JSON_ARRAY))
+    {
+        jsonStatus = JSON_ARRAY_EXPECTED;
     }
     else
     {
-        return JSON_ARRAY_EXPECTED;
+        StringBuffer buffer;
+        TextStatus status = BuildBuffer(&buffer, node, name, value, type);
+        char* newSource = DetachString(&buffer);
+        if (status == TEXT_OK)
+        {
+            free(node->source);
+            node->source = newSource;
+            jsonStatus = JSON_OK;
+        }
+        else
+        {
+            free(newSource);
+            jsonStatus = JSON_OUT_OF_MEMORY;
+        }
     }
+    return jsonStatus;
 }
 
 
@@ -156,15 +229,9 @@ JsonStatus ComposeObject(JsonNode* object)
 
 JsonStatus PutObjectMember(JsonNode* object, const char* name, const JsonNode* value)
 {
-    JsonStatus status;
     if ((value != NULL) && (value->type == JSON_OBJECT))
     {
-        char* valueString = malloc(value->length + 1);
-        strncpy(valueString, value->source + value->offset, value->length);
-        valueString[value->length] = '\0';
-        status = PutMember(object, name, valueString, FALSE);
-        free(valueString);
-        return status;
+        return AddToNode(object, name, (const void*) value, NODE);
     }
     else
     {
@@ -175,35 +242,31 @@ JsonStatus PutObjectMember(JsonNode* object, const char* name, const JsonNode* v
 
 JsonStatus PutStringMember(JsonNode* object, const char* name, const char* value)
 {
-    return PutMember(object, name, value, TRUE);
+    return AddToNode(object, name, value, STRING);
 }
 
 
 JsonStatus PutIntegerMember(JsonNode* object, const char* name, long value)
 {
-    char string[16];
-    sprintf(string, "%d", value);
-    return PutMember(object, name, string, FALSE);
+    return AddToNode(object, name, (const void*) &value, INTEGER);
 }
 
 
 JsonStatus PutRealMember(JsonNode* object, const char* name, double value)
 {
-    char string[32];
-    sprintf(string, "%.15g", value);
-    return PutMember(object, name, string, FALSE);
+    return AddToNode(object, name, (const void*) &value, REAL);
 }
 
 
 JsonStatus PutBooleanMember(JsonNode* object, const char* name, bool value)
 {
-    return PutMember(object, name, (value) ? JSON_TRUE_LITERAL : JSON_FALSE_LITERAL, FALSE);
+    return AddToNode(object, name, (value) ? JSON_TRUE_LITERAL : JSON_FALSE_LITERAL, LITERAL);
 }
 
 
 JsonStatus PutNullMember(JsonNode* object, const char* name)
 {
-    return PutMember(object, name, JSON_NULL_LITERAL, FALSE);
+    return AddToNode(object, name, JSON_NULL_LITERAL, LITERAL);
 }
 
 
@@ -227,40 +290,43 @@ JsonStatus ComposeArray(JsonNode* array)
 
 JsonStatus AddObjectElement(JsonNode* array, const JsonNode* element)
 {
-    return AddArrayElement(array, element->source + element->offset, element->length, FALSE);
+    if ((element != NULL) && (element->type == JSON_OBJECT))
+    {
+        return AddToNode(array, NULL, (const void*) element, NODE);
+    }
+    else
+    {
+        return JSON_INVALID_PARAMETER;
+    }
 }
 
 
 JsonStatus AddStringElement(JsonNode* array, const char* element)
 {
-    return AddArrayElement(array, element, strlen(element), TRUE);
+    return AddToNode(array, NULL, element, STRING);
 }
 
 
-JsonStatus AddIntegerElement(JsonNode* array, const long value)
+JsonStatus AddIntegerElement(JsonNode* array, long value)
 {
-    char valueString[16];
-    sprintf(valueString, "%d", value);
-    return AddArrayElement(array, valueString, strlen(valueString), FALSE);
+    return AddToNode(array, NULL, (const void*) &value, INTEGER);
 }
 
 
-JsonStatus AddRealElement(JsonNode* array, const double value)
+JsonStatus AddRealElement(JsonNode* array, double value)
 {
-    char valueString[32];
-    sprintf(valueString, "%.15g", value);
-    return AddArrayElement(array, valueString, strlen(valueString), FALSE);
+    return AddToNode(array, NULL, (const void*) &value, REAL);
 }
 
 
-JsonStatus AddBooleanElement(JsonNode* array, const bool value)
+JsonStatus AddBooleanElement(JsonNode* array, bool value)
 {
     char* valueString = (value) ? JSON_TRUE_LITERAL : JSON_FALSE_LITERAL;
-    return AddArrayElement(array, valueString, strlen(valueString), FALSE);
+    return AddToNode(array, NULL, valueString, LITERAL);
 }
 
 
 JsonStatus AddNullElement(JsonNode* array)
 {
-    return AddArrayElement(array, JSON_NULL_LITERAL, strlen(JSON_NULL_LITERAL), FALSE);
+    return AddToNode(array, NULL, JSON_NULL_LITERAL, LITERAL);
 }

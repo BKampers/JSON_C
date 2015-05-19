@@ -14,9 +14,9 @@ JsonStatus PutNullMember(JsonNode* object, const char* name);
 JsonStatus ComposeArray(JsonNode* array);
 JsonStatus AddObjectElement(JsonNode* array, const JsonNode* element);
 JsonStatus AddStringElement(JsonNode* array, const char* element);
-JsonStatus AddIntegerElement(JsonNode* array, const long value);
-JsonStatus AddRealElement(JsonNode* array, const double value);
-JsonStatus AddBooleanElement(JsonNode* array, const bool value);
+JsonStatus AddIntegerElement(JsonNode* array, long value);
+JsonStatus AddRealElement(JsonNode* array, double value);
+JsonStatus AddBooleanElement(JsonNode* array, bool value);
 JsonStatus AddNullElement(JsonNode* array);
 
 #endif	/* __JSONCOMPOSER_H__ */
