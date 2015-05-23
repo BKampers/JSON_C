@@ -122,6 +122,27 @@ void ArrayLiteralsTest()
 }
 
 
+void InvalidNodesTest()
+{
+    JsonNode object, array, invalid;
+    JsonStatus status = ComposeObject(&object);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = ComposeArray(&array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = PutObjectMember(&array, "Object", &object);
+    EXPECT_EQUAL_INT(JSON_OBJECT_EXPECTED, status);
+    status = AddIntegerElement(&object, -1);
+    EXPECT_EQUAL_INT(JSON_ARRAY_EXPECTED, status);
+    invalid.type = JSON_INVALID;
+    status = PutObjectMember(&object, "Invalid", &invalid);
+    EXPECT_EQUAL_INT(JSON_INVALID_PARAMETER, status);
+    status = AddObjectElement(&array, &invalid);
+    EXPECT_EQUAL_INT(JSON_INVALID_PARAMETER, status);
+    free(array.source);
+    free(object.source);
+}
+
+
 int main(int argc, char** argv)
 {
     startSuite("Composer test");
@@ -148,6 +169,10 @@ int main(int argc, char** argv)
 
     start("ArrayLiteralsTest");
     ArrayLiteralsTest();
+    finish();
+    
+    start("InvalidNodesTest");
+    InvalidNodesTest();
     finish();
     
     finishSuite();

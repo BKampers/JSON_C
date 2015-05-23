@@ -235,7 +235,7 @@ JsonStatus PutObjectMember(JsonNode* object, const char* name, const JsonNode* v
     }
     else
     {
-        return JSON_OBJECT_EXPECTED;
+        return JSON_INVALID_PARAMETER;
     }
 }
 
