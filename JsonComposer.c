@@ -193,6 +193,7 @@ JsonStatus AddToNode(JsonNode* node, const char* name, const void* value, ValueT
         {
             free(node->source);
             node->source = newSource;
+            node->length = strlen(newSource);
             jsonStatus = JSON_OK;
         }
         else
@@ -230,6 +231,19 @@ JsonStatus ComposeObject(JsonNode* object)
 JsonStatus PutObjectMember(JsonNode* object, const char* name, const JsonNode* value)
 {
     if ((value != NULL) && (value->type == JSON_OBJECT))
+    {
+        return AddToNode(object, name, (const void*) value, NODE);
+    }
+    else
+    {
+        return JSON_INVALID_PARAMETER;
+    }
+}
+
+
+JsonStatus PutArrayMember(JsonNode* object, const char* name, const JsonNode* value)
+{
+    if ((value != NULL) && (value->type == JSON_ARRAY))
     {
         return AddToNode(object, name, (const void*) value, NODE);
     }
@@ -291,6 +305,19 @@ JsonStatus ComposeArray(JsonNode* array)
 JsonStatus AddObjectElement(JsonNode* array, const JsonNode* element)
 {
     if ((element != NULL) && (element->type == JSON_OBJECT))
+    {
+        return AddToNode(array, NULL, (const void*) element, NODE);
+    }
+    else
+    {
+        return JSON_INVALID_PARAMETER;
+    }
+}
+
+
+JsonStatus AddArrayElement(JsonNode* array, const JsonNode* element)
+{
+    if ((element != NULL) && (element->type == JSON_ARRAY))
     {
         return AddToNode(array, NULL, (const void*) element, NODE);
     }

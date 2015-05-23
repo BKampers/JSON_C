@@ -6,31 +6,34 @@
 #include "JsonComposer.h"
 
 
+#define EXPECT_NODE_SOURCE(EXPECTED, NODE) EXPECT_EQUAL_INT(0, strncmp(EXPECTED, NODE.source + NODE.offset, NODE.length))
+
+
 void ObjectTest()
 {
     JsonNode object;
     JsonStatus status = ComposeObject(&object);
     ASSERT_EQUAL_INT(JSON_OK, status);
     ASSERT_EQUAL_INT(JSON_OBJECT, object.type);
-    ASSERT_EQUAL_STRING("{}", object.source);
+    EXPECT_NODE_SOURCE("{}", object);
     status = PutStringMember(&object, "String", "Test");
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("{\"String\":\"Test\"}", object.source);
+    EXPECT_NODE_SOURCE("{\"String\":\"Test\"}", object);
     status = PutStringMember(&object, "Escapes", "\b \n \r \t \"");
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\"}", object.source);
+    EXPECT_NODE_SOURCE("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\"}", object);
     status = PutIntegerMember(&object, "Year", 2015);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015}", object.source);
+    EXPECT_NODE_SOURCE("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015}", object);
     status = PutBooleanMember(&object, "False", FALSE);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    EXPECT_EQUAL_STRING("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false}", object.source);
+    EXPECT_NODE_SOURCE("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false}", object);
     status = PutBooleanMember(&object, "True", TRUE);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    EXPECT_EQUAL_STRING("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false,\"True\":true}", object.source);
+    EXPECT_NODE_SOURCE("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false,\"True\":true}", object);
     status = PutNullMember(&object, "Null");
     ASSERT_EQUAL_INT(JSON_OK, status);
-    EXPECT_EQUAL_STRING("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false,\"True\":true,\"Null\":null}", object.source);
+    EXPECT_NODE_SOURCE("{\"String\":\"Test\",\"Escapes\":\"\\b \\n \\r \\t \\\"\",\"Year\":2015,\"False\":false,\"True\":true,\"Null\":null}", object);
     free(object.source);
 }
 
@@ -48,7 +51,7 @@ void ControlCharactersTest()
     string[0x1F] = '\0';
     status = PutStringMember(&object, "Controls", string);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    EXPECT_EQUAL_STRING("{\"Controls\":\"\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f\"}", object.source);
+    EXPECT_NODE_SOURCE("{\"Controls\":\"\\u0001\\u0002\\u0003\\u0004\\u0005\\u0006\\u0007\\b\\t\\n\\u000b\\f\\r\\u000e\\u000f\\u0010\\u0011\\u0012\\u0013\\u0014\\u0015\\u0016\\u0017\\u0018\\u0019\\u001a\\u001b\\u001c\\u001d\\u001e\\u001f\"}", object);
     free(object.source);
 }
 
@@ -62,7 +65,22 @@ void PutObjectTest()
     ASSERT_EQUAL_INT(JSON_OK, status);
     status = PutObjectMember(&object, "Object", &member);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    EXPECT_EQUAL_STRING("{\"Object\":{}}", object.source);
+    EXPECT_NODE_SOURCE("{\"Object\":{}}", object);
+    free(member.source);
+    free(object.source);
+}
+
+
+void PutArrayTest()
+{
+    JsonNode object, member;
+    JsonStatus status = ComposeObject(&object);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = ComposeArray(&member);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = PutArrayMember(&object, "Array", &member);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    EXPECT_NODE_SOURCE("{\"Array\":[]}", object);
     free(member.source);
     free(object.source);
 }
@@ -74,15 +92,15 @@ void ArrayTest()
     JsonStatus status = ComposeArray(&array);
     ASSERT_EQUAL_INT(JSON_OK, status);
     ASSERT_EQUAL_INT(JSON_ARRAY, array.type);
-    ASSERT_EQUAL_STRING("[]", array.source);
+    EXPECT_NODE_SOURCE("[]", array);
     status = ComposeObject(&element);
     ASSERT_EQUAL_INT(JSON_OK, status);
     status = AddObjectElement(&array, &element);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("[{}]", array.source);
+    EXPECT_NODE_SOURCE("[{}]", array);
     status = AddStringElement(&array, "String");
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("[{},\"String\"]", array.source);
+    EXPECT_NODE_SOURCE("[{},\"String\"]", array);
     free(element.source);
     free(array.source);
 }
@@ -94,12 +112,12 @@ void ArrayNumbersTest()
     JsonStatus status = ComposeArray(&array);
     ASSERT_EQUAL_INT(JSON_OK, status);
     ASSERT_EQUAL_INT(JSON_ARRAY, array.type);
-    ASSERT_EQUAL_STRING("[]", array.source);
+    EXPECT_NODE_SOURCE("[]", array);
     status = AddIntegerElement(&array, 1234567890);
     ASSERT_EQUAL_INT(JSON_OK, status);
     status = AddRealElement(&array, 0.123456789);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("[1234567890,0.123456789]", array.source);
+    EXPECT_NODE_SOURCE("[1234567890,0.123456789]", array);
     free(array.source);
 }
 
@@ -110,14 +128,32 @@ void ArrayLiteralsTest()
     JsonStatus status = ComposeArray(&array);
     ASSERT_EQUAL_INT(JSON_OK, status);
     ASSERT_EQUAL_INT(JSON_ARRAY, array.type);
-    ASSERT_EQUAL_STRING("[]", array.source);
+    EXPECT_NODE_SOURCE("[]", array);
     status = AddBooleanElement(&array, TRUE);
     ASSERT_EQUAL_INT(JSON_OK, status);
     status = AddBooleanElement(&array, FALSE);
     ASSERT_EQUAL_INT(JSON_OK, status);
     status = AddNullElement(&array);
     ASSERT_EQUAL_INT(JSON_OK, status);
-    ASSERT_EQUAL_STRING("[true,false,null]", array.source);
+    EXPECT_NODE_SOURCE("[true,false,null]", array);
+    free(array.source);
+}
+
+
+void ArrayArrayTest()
+{
+    JsonNode array, member;
+    JsonStatus status = ComposeArray(&array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = ComposeArray(&member);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = AddStringElement(&member, "String");
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    EXPECT_NODE_SOURCE("[\"String\"]", member);
+    status = AddArrayElement(&array, &member);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    EXPECT_NODE_SOURCE("[[\"String\"]]", array);
+    free(member.source);
     free(array.source);
 }
 
@@ -159,6 +195,10 @@ int main(int argc, char** argv)
     PutObjectTest();
     finish();
     
+    start("PutArrayTest");
+    PutObjectTest();
+    finish();
+    
     start("ArrayTest");
     ArrayTest();
     finish();
@@ -169,6 +209,10 @@ int main(int argc, char** argv)
 
     start("ArrayLiteralsTest");
     ArrayLiteralsTest();
+    finish();
+    
+    start("ArrayArrayTest");
+    ArrayArrayTest();
     finish();
     
     start("InvalidNodesTest");
