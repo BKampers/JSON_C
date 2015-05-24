@@ -7,6 +7,8 @@
 #include "JsonParser.h"
 #include "JsonGenerator.h"
 
+void ScanNext(char*, JsonNode*);
+
 
 char* validSource = "{ \"Number\" :  -0.123456789e+12, \"String\"   :   \"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\" ,  \"EmptyObject\":{}, \"Object\":{\"E1\":1,\"E2\":2}, \"Array\" : [1,23,456,7890]}";
 char* controlStringSource = "{ \"Control\" : \"\t\" }";
@@ -21,7 +23,7 @@ void dumpNode(JsonNode* node)
     {
         printf("%c", node->source[i]);
     }
-    printf("| %d\r\n", node->length);
+    printf("| %d\r\n", (int) node->length);
 }
 
 
@@ -140,14 +142,14 @@ void GeneratorTest()
     PutString(root, "Text", "Hello World");
     PutReal(root, "Pi", 3.14159265358979323846264338327950288419716939937510582097494459230781640);
     string = ToString(root);
-    printf(string);
+    printf("%s", string);
     free(string);
     printf("\r\n");
     ClearJsonObject(root);
     ClearJsonObject(sizes);
     ClearJsonArray(array);
     string = ToString(root);
-    printf(string);
+    printf("%s", string);
     free(string);
     printf("\r\n");
 }

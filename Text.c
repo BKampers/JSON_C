@@ -9,6 +9,12 @@
 #define STRING_BUFFER_INCREMENT 64
 
 
+bool IsUnicodeControl(char character)
+{
+    return (character <= (char) 0x1F) || (((char) 0x7F <= character) && (character <= (char) 0x9F));
+}
+
+
 void InitializeStringBuffer(StringBuffer* stringBuffer)
 {
     stringBuffer->buffer = NULL;

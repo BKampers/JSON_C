@@ -4,8 +4,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "ApiStatus.h"
 #include "Types.h"
+
 
 time_t suitStartTime;
 time_t testStartTime;
@@ -153,22 +153,6 @@ bool expectEqualString(const char* expected, const char* actual, int line)
         sprintf(message, "expected: %s, actual: %s", expected, actual);
     }
     printTestLine(pass, line, message);
-    return pass;
-}
-
-
-bool expectStatus(Status expected, Status actual, int line)
-{
-    char message[64];
-    bool pass = (expected == actual);
-    if (pass)
-    {
-        sprintf(message, "%s", actual);
-    }
-    else
-    {
-        sprintf(message, "expected: %s, actual: %s", expected, actual);
-    }
     return pass;
 }
 

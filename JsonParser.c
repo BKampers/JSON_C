@@ -4,21 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
-
-#define OBJECT_START '{'
-#define OBJECT_END   '}'
-
-#define ARRAY_START '['
-#define ARRAY_END   ']'
-
-#define STRING_START '\"'
-#define STRING_END   '\"'
-
-#define NAME_VALUE_SEPARATOR ':'
-#define ELEMENT_SEPARATOR ','
-
-#define ESCAPE_CHARACTER '\\'
-#define UNICODE_CHARACTER 'u'
+#include "Text.h"
 
 
 const char* WHITE_SPACES = " \f\n\r\t";
@@ -37,12 +23,6 @@ void InitializeNode(JsonNode* node, char* source)
 bool IsWhiteSpace(char character)
 {
     return strchr(WHITE_SPACES, character) != NULL;
-}
-
-
-bool IsUnicodeControl(char character)
-{
-    return (character <= (char) 0x1F) || (((char) 0x7F <= character) && (character <= (char) 0x9F));
 }
 
 
@@ -132,7 +112,6 @@ void ScanString(JsonNode* node)
             if (character == ESCAPE_CHARACTER)
             {
                 node->length++;
-//                scanning = ScanEscape(node);
             }
             else if (IsUnicodeControl(character))
             {

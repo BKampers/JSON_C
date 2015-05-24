@@ -17,6 +17,8 @@ typedef struct
 } StringBuffer;
 
 
+bool IsUnicodeControl(char character);
+
 void InitializeStringBuffer(StringBuffer* stringBuffer);
 TextStatus AppendString(StringBuffer* stringBuffer, const char* string);
 TextStatus AppendSubstring(StringBuffer* stringBuffer, const char* string, size_t offset, size_t count);

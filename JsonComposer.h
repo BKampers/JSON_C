@@ -1,7 +1,10 @@
 #ifndef __JSONCOMPOSER_H__
 #define	__JSONCOMPOSER_H__
 
-#include "JsonParser.h"
+#include <stdlib.h>
+
+#include "Types.h"
+#include "Json.h"
 
 JsonStatus ComposeObject(JsonNode* object);
 JsonStatus PutObjectMember(JsonNode* object, const char* name, const JsonNode* value);

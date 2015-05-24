@@ -43,7 +43,7 @@ TextStatus PrepareBuffer(StringBuffer* buffer, const JsonNode* node)
     status = AppendSubstring(buffer, node->source, 0, strlen(node->source) - 1);
     if ((status == TEXT_OK) && ! IsEmpty(node))
     {
-        status = AppendCharacter(buffer, ',');
+        status = AppendCharacter(buffer, ELEMENT_SEPARATOR);
     }
     return status;
 }
@@ -81,7 +81,7 @@ TextStatus AppendQuoted(StringBuffer* buffer, const char* string)
 {
     size_t length = strlen(string);
     size_t i = 0;
-    TextStatus status = AppendCharacter(buffer, '\"');
+    TextStatus status = AppendCharacter(buffer, STRING_START);
     while ((i < length) && (status == TEXT_OK))
     {
         char character = string[i];
@@ -101,7 +101,7 @@ TextStatus AppendQuoted(StringBuffer* buffer, const char* string)
     }
     if (status == TEXT_OK)
     {
-        status = AppendCharacter(buffer, '\"');
+        status = AppendCharacter(buffer, STRING_END);
     }
     return status;
 }
@@ -112,7 +112,7 @@ TextStatus AppendName(StringBuffer* buffer, const char* name)
     TextStatus status = AppendQuoted(buffer, name);
     if (status == TEXT_OK)
     {
-        status = AppendCharacter(buffer, ':');
+        status = AppendCharacter(buffer, NAME_VALUE_SEPARATOR);
     }
     return status;
 }
@@ -163,7 +163,7 @@ TextStatus BuildBuffer(StringBuffer* buffer, JsonNode* node, const char* name, c
     }
     if (status == TEXT_OK)
     {
-        status = AppendCharacter(buffer, (node->type == JSON_OBJECT) ? '}' : ']');
+        status = AppendCharacter(buffer, (node->type == JSON_OBJECT) ? OBJECT_END : ARRAY_END);
     }
     return status;
 }
