@@ -42,6 +42,8 @@ void AppendValueString(const JsonValue* value, StringBuffer* stringBuffer)
         case JSON_ARRAY:
             ToArraySring((JsonArray*) value->data, stringBuffer);
             break;
+        default:
+            break;
    }
 }
 
@@ -161,6 +163,8 @@ void ClearJsonObject(JsonObject* object)
             case JSON_STRING:
                 free(pair->value.data);
                 break;
+            default:
+                break;
         }
     }
     object->elementCount = 0;
@@ -232,6 +236,8 @@ void ClearJsonArray(JsonArray* array)
             case JSON_NUMBER:
             case JSON_STRING:
                 free(element->data);
+                break;
+            default:
                 break;
         }
     }

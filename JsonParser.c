@@ -42,7 +42,7 @@ bool IsWhiteSpace(char character)
 
 bool IsUnicodeControl(char character)
 {
-    return (character <= (char) 0x1F) || ((char) 0x7F <= character) && (character <= (char) 0x9F);
+    return (character <= (char) 0x1F) || (((char) 0x7F <= character) && (character <= (char) 0x9F));
 }
 
 
@@ -286,7 +286,7 @@ bool ScanInteger(JsonNode* node)
 }
 
 
-bool ScanFraction(JsonNode* node)
+void ScanFraction(JsonNode* node)
 {
     if (ScanDecimalSeparator(node))
     {
@@ -298,7 +298,7 @@ bool ScanFraction(JsonNode* node)
 }
 
 
-bool ScanExponent(JsonNode* node)
+void ScanExponent(JsonNode* node)
 {
     if (ScanExponentSeparator(node))
     {
@@ -527,7 +527,7 @@ void GetValue(const JsonNode* pair, JsonNode* value)
 }
 
 
-JsonStatus ProcessUnicode(const JsonNode* node, int* index, char* character)
+JsonStatus ProcessUnicode(const JsonNode* node, size_t* index, char* character)
 {
     JsonStatus status = JSON_OK;
     int unicode = 0;
@@ -566,7 +566,7 @@ JsonStatus ProcessUnicode(const JsonNode* node, int* index, char* character)
 }
 
 
-JsonStatus ProcessEscapeCharacter(const JsonNode* node, int* index, char* character)
+JsonStatus ProcessEscapeCharacter(const JsonNode* node, size_t* index, char* character)
 {
     JsonStatus status = JSON_OK;
     (*index)++;
@@ -618,8 +618,8 @@ JsonStatus AllocateString(const JsonNode* object, const char* name, char** value
     if (status == JSON_OK)
     {
         size_t i;
-        *value = malloc(node.length - 2);
         size_t j = 0;
+        *value = malloc(node.length - 2);
         for (i = 1; (i < node.length - 1) && status == JSON_OK; ++i)
         {
             char character = *(node.source + node.offset + i);

@@ -31,8 +31,8 @@ char* EMPTY_ARRAY_SOURCE = "[]";
 bool IsEmpty(const JsonNode* node)
 {
     return
-        (node->type == JSON_OBJECT) && (strcmp(node->source, EMPTY_OBJECT_SOURCE) == 0) ||
-        (node->type == JSON_ARRAY) && (strcmp(node->source, EMPTY_ARRAY_SOURCE) == 0);
+        ((node->type == JSON_OBJECT) && (strcmp(node->source, EMPTY_OBJECT_SOURCE) == 0)) ||
+        ((node->type == JSON_ARRAY) && (strcmp(node->source, EMPTY_ARRAY_SOURCE) == 0));
 }
 
 
@@ -131,7 +131,7 @@ TextStatus AppendValue(StringBuffer* buffer, const void* value, ValueType type)
         case INTEGER:
         {
             char string[16];
-            sprintf(string, "%d", *((long*) value));
+            sprintf(string, "%ld", *((long*) value));
             return AppendString(buffer, string);
         }
         case STRING:
