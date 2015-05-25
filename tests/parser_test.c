@@ -7,12 +7,8 @@
 #include "Simple.h"
 
 
-/*
-** JSON Parser Test Suite
-*/
-
-
 #define EXPECT_NODE_SOURCE(EXPECTED, NODE) EXPECT_EQUAL_INT(0, strncmp(EXPECTED, NODE.source + NODE.offset, NODE.length))
+
 
 void ExpectValidInteger(char* source, const char* expected)
 {
@@ -24,6 +20,35 @@ void ExpectValidInteger(char* source, const char* expected)
     EXPECT_NODE_SOURCE(expected, value);
 }
 
+
+void ExpectValidReal(char* source, const char* expected)
+{
+    JsonNode object, pair, value;
+    Initialize(source, &object);
+    ParseFirst(&object, &pair);
+    GetValue(&pair, &value);
+    EXPECT_EQUAL_INT(JSON_NUMBER, value.type);
+    EXPECT_NODE_SOURCE(expected, value);    
+}
+
+
+void ExpectInvalidString(char* source)
+{
+    JsonNode object;
+    char* string;
+    JsonStatus status;
+    Initialize(source, &object);
+    EXPECT_EQUAL_INT(JSON_OBJECT, object.type);
+    status = AllocateString(&object, "invalid", &string);
+    EXPECT_EQUAL_INT(JSON_INVALID_STRING, status);
+    free(string);
+    
+}
+
+
+/*
+** JSON Parser Test Suite
+*/
 
 void ValidIntegerTest() {
     ExpectValidInteger("{\"int\":123}", "123");
@@ -43,17 +68,6 @@ void InvalidIntegerTest() {
     EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"int\":+5}", &object);
     EXPECT_EQUAL_INT(JSON_INVALID, object.type);
-}
-
-
-void ExpectValidReal(char* source, const char* expected)
-{
-    JsonNode object, pair, value;
-    Initialize(source, &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    EXPECT_EQUAL_INT(JSON_NUMBER, value.type);
-    EXPECT_NODE_SOURCE(expected, value);    
 }
 
 
@@ -175,20 +189,6 @@ void EscapeCharactersTest()
 }
 
 
-void ExpectInvalidString(const char* source)
-{
-    JsonNode object;
-    char* string;
-    JsonStatus status;
-    Initialize(source, &object);
-    EXPECT_EQUAL_INT(JSON_OBJECT, object.type);
-    status = AllocateString(&object, "invalid", &string);
-    EXPECT_EQUAL_INT(JSON_INVALID_STRING, status);
-    free(string);
-    
-}
-
-
 void InvalidEscapeTest()
 {
     ExpectInvalidString("{\"invalid\":\"\\q\"}");
@@ -196,6 +196,61 @@ void InvalidEscapeTest()
     ExpectInvalidString("{\"invalid\":\"\\u1a\"}");
     ExpectInvalidString("{\"invalid\":\"\\u1ae\"}");
     ExpectInvalidString("{\"invalid\":\"\\u1a2x\"}");
+}
+
+
+void NestedSourcesTest()
+{
+    JsonNode root, array, objectElement, object, objectMember, arrayMember, arrayElement;
+    float real;
+    int integer;
+    JsonStatus status;
+    Initialize("{\"Object\":{\"a\":[{\"1\":1,\"2\":2},{\"3\":3,\"4\":4}],\"o\":{}},\"Array\":[[5.0],[]]}", &root);
+    status = GetObject(&root, "Object", &object);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_OBJECT, object.type);
+    status = GetArray(&object, "a", &arrayMember);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_ARRAY, arrayMember.type);
+    status = GetObjectAt(&arrayMember, 0, &objectElement);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_OBJECT, objectElement.type);
+    status = GetInt(&objectElement, "1", &integer);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(1, integer);
+    status = GetInt(&objectElement, "2", &integer);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(2, integer);
+    status = GetObjectAt(&arrayMember, 1, &objectElement);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_OBJECT, objectElement.type);
+    status = GetInt(&objectElement, "3", &integer);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(3, integer);
+    status = GetInt(&objectElement, "4", &integer);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(4, integer);
+    status = GetObjectAt(&arrayMember, 2, &objectElement);
+    EXPECT_EQUAL_INT(JSON_OUT_OF_BOUNDS, status);
+    status = GetObject(&object, "o", &objectMember);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_OBJECT, objectMember.type);
+    status = GetArray(&root, "Array", &array);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_ARRAY, array.type);
+    status = GetArrayAt(&array, 0, &arrayElement);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_ARRAY, arrayElement.type);
+    status = GetFloatAt(&arrayElement, 0, &real);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_DOUBLE(5.0, real, 0.0);
+    status = GetFloatAt(&arrayElement, 1, &real);
+    EXPECT_EQUAL_INT(JSON_OUT_OF_BOUNDS, status);
+    status = GetArrayAt(&array, 1, &arrayElement);
+    EXPECT_EQUAL_INT(JSON_OK, status);
+    EXPECT_EQUAL_INT(JSON_ARRAY, arrayElement.type);
+    status = GetFloatAt(&arrayElement, 0, &real);
+    EXPECT_EQUAL_INT(JSON_OUT_OF_BOUNDS, status);
 }
 
 
@@ -243,7 +298,11 @@ int main(int argc, char** argv)
     InvalidEscapeTest();
     finish();
 
+    start("NestedsourcesTest");
+    NestedSourcesTest();
+    finish();
+
     finishSuite();
 
-    return (EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }

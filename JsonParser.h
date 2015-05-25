@@ -20,5 +20,11 @@ JsonStatus GetInt(const JsonNode* object, const char* name, int* value);
 JsonStatus GetObject(const JsonNode* object, const char* name, JsonNode* value);
 JsonStatus GetArray(const JsonNode* object, const char* name, JsonNode* value);
 
+JsonStatus GetDoubletAt(const JsonNode* array, int index, double* element);
+JsonStatus GetFloatAt(const JsonNode* array, int index, float* element);
+JsonStatus GetIntAt(const JsonNode* array, int index, int* element);
+JsonStatus GetObjectAt(const JsonNode* array, int index, JsonNode* element);
+JsonStatus GetArrayAt(const JsonNode* array, int index, JsonNode* element);
+
 #endif	/* __JSONPARSER_H__ */
 

@@ -450,6 +450,30 @@ JsonStatus GetNode(const JsonNode* object, const char* name, JsonType type, Json
 }
 
 
+JsonStatus GetNodeAt(const JsonNode* array, int index, JsonType type, JsonNode* element)
+{
+    size_t offset = array->offset + 1;
+    while (index >= 0)
+    {
+        ScanNext(array->source + offset, element);
+        if (element->type == JSON_ARRAY_END)
+        {
+            return JSON_OUT_OF_BOUNDS;
+        }
+        else if (index == 0)
+        {
+            return (element->type == type) ? JSON_OK : JSON_TYPE_MISMATCH;
+        }
+        else if (element->type == JSON_ELEMENT_SEPARATOR)
+        {
+            index--;
+        }
+        offset += element->length;
+    }
+    return JSON_INVALID_PARAMETER;
+}
+
+
 /* 
 ** Interface
 */
@@ -660,4 +684,52 @@ JsonStatus GetObject(const JsonNode* object, const char* name, JsonNode* value)
 JsonStatus GetArray(const JsonNode* object, const char* name, JsonNode* value)
 {
     return GetNode(object, name, JSON_ARRAY, value);
+}
+
+
+JsonStatus GetDoubleAt(const JsonNode* array, int index, double* element)
+{
+    JsonNode node;
+    JsonStatus status = GetNodeAt(array, index, JSON_NUMBER, &node);
+    if (status == JSON_OK)
+    {
+        *element = atof(node.source + node.offset);
+    }
+    return status;
+}
+
+
+JsonStatus GetFloatAt(const JsonNode* array, int index, float* element)
+{
+    double doubleElement;
+    JsonStatus status = GetDoubleAt(array, index, &doubleElement);
+    if (status == JSON_OK)
+    {
+        *element = (float) doubleElement;
+    }
+    return status;
+}
+
+
+JsonStatus GetIntAt(const JsonNode* array, int index, int* element)
+{
+    double doubleElement;
+    JsonStatus status = GetDoubleAt(array, index, &doubleElement);
+    if (status == JSON_OK)
+    {
+        *element = (int) doubleElement;
+    }
+    return status;
+}
+
+
+JsonStatus GetObjectAt(const JsonNode* array, int index, JsonNode* element)
+{
+    return GetNodeAt(array, index, JSON_OBJECT, element);
+}
+
+
+JsonStatus GetArrayAt(const JsonNode* array, int index, JsonNode* element)
+{
+    return GetNodeAt(array, index, JSON_ARRAY, element);
 }
