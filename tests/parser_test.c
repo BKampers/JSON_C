@@ -4,171 +4,24 @@
 
 #include "JsonParser.h" 
 
+#include "Simple.h"
+
 
 /*
 ** JSON Parser Test Suite
 */
 
 
-const char* suiteName = NULL;
-const char* testName = NULL;
+#define EXPECT_NODE_SOURCE(EXPECTED, NODE) EXPECT_EQUAL_INT(0, strncmp(EXPECTED, NODE.source + NODE.offset, NODE.length))
 
-
-void StartSuite(const char* name)
-{
-    suiteName = name;
-    printf("%%SUITE_STARTING%% ");
-    printf(suiteName);
-    printf("\n");
-    printf("%%SUITE_STARTED%%\n");
-}
-
-
-void FinishSuite()
-{
-    printf("%%SUITE_FINISHED%% time=0\n");
-    suiteName = NULL;
-}
-
-
-void StartTest(const char* name)
-{
-    testName = name;
-    printf("%%TEST_STARTED%% ");
-    printf(testName);
-    printf(" (");
-    printf(suiteName);
-    printf(")\n");
-}
-
-
-void FinishTest()
-{
-    printf("%%TEST_FINISHED%% time=0 ");
-    printf(testName);
-    printf(" (JSON Parser Test)\n");
-    testName = NULL;
-}
-
-
-void PrintTestResult(bool pass, const char* message)
-{
-    if (pass)
-    {
-        printf("%%TEST_PASSED%%");
-    }
-    else
-    {
-        printf("%%TEST_FAILED%%");
-    }
-    printf(" time=0");
-    printf(" testname=");
-    printf(testName);
-    printf(" (JSON Parser Test)");
-    if (strlen(message) > 0)
-    {
-        printf(" message=");
-        printf(message);
-    }
-    printf("\n");
-}
-
-
-void ExpectEqualBoolean(bool expected, bool actual)
-{
-    char message[256];
-    bool pass = (expected) ? actual : ! actual;
-    if (pass)
-    {
-        message[0] = '\0';
-    }
-    else
-    {
-        sprintf(message, "expected = %d, actual = %d", expected, actual);
-    }
-    PrintTestResult(pass, message);
-}
-
-
-void ExpectTrue(bool actual)
-{
-    ExpectEqualBoolean(TRUE, actual);
-}
-
-
-void ExpectEqualInteger(int expected, int actual)
-{
-    char message[256];
-    bool pass = (expected == actual);
-    if (pass)
-    {
-        message[0] = '\0';
-    }
-    else
-    {
-        sprintf(message, "expected = %d, actual = %d", expected, actual);
-    }
-    PrintTestResult(pass, message);
-}
-
-
-void ExpectEqualDouble(double expected, double actual)
-{
-    char message[256];
-    bool pass = (expected == actual);
-    if (pass)
-    {
-        message[0] = '\0';
-    }
-    else
-    {
-        sprintf(message, "expected = %f, actual = %f", expected, actual);
-    }
-    PrintTestResult(pass, message);
-}
-
-
-void ExpectEqualString(const char* expected, const char* actual)
-{
-    char message[256];
-    bool pass = (strcmp(expected, actual) == 0);
-    if (pass)
-    {
-        message[0] = '\0';
-    }
-    else
-    {
-        sprintf(message, "expected = %s, actual = %s", expected, actual);
-    }
-    PrintTestResult(pass, message);
-}
-
-
-void ExpectNodeText(const char* expected, const JsonNode* actual)
-{
-    char message[256];
-    bool pass = (strlen(expected) == actual->length) &&(strncmp(expected, actual->source + actual->offset, actual->length) == 0);
-    if (pass)
-    {
-        message[0] = '\0';
-    }
-    else
-    {
-        sprintf(message, "expected = %s, actual = ", expected);
-        strncat(message, actual->source + actual->offset, actual->length);
-    }
-    PrintTestResult(pass, message);
-}
-
-
-void ExpectValidInteger(const char* source, const char* expected)
+void ExpectValidInteger(char* source, const char* expected)
 {
     JsonNode object, pair, value;
     Initialize(source, &object);
     ParseFirst(&object, &pair);
     GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectNodeText(expected, &value);
+    EXPECT_EQUAL_INT(JSON_NUMBER, value.type);
+    EXPECT_NODE_SOURCE(expected, value);
 }
 
 
@@ -185,22 +38,22 @@ void ValidIntegerTest() {
 void InvalidIntegerTest() {
     JsonNode object;
     Initialize("{\"int\":12a}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"int\":0123}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"int\":+5}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
 }
 
 
-void ExpectValidReal(const char* source, const char* expected)
+void ExpectValidReal(char* source, const char* expected)
 {
     JsonNode object, pair, value;
     Initialize(source, &object);
     ParseFirst(&object, &pair);
     GetValue(&pair, &value);
-    ExpectEqualInteger(JSON_NUMBER, value.type);
-    ExpectNodeText(expected, &value);    
+    EXPECT_EQUAL_INT(JSON_NUMBER, value.type);
+    EXPECT_NODE_SOURCE(expected, value);    
 }
 
 
@@ -218,17 +71,17 @@ void InvalidRealTest()
 {
     JsonNode object;
     Initialize("{\"invalid\":.1}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"invalid\":2.}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"invalid\":3.a}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"invalid\":4E5.6}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"invalid\":33.e4}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"invalid\":45.6E}", &object);
-    ExpectEqualInteger(JSON_INVALID, object.type);
+    EXPECT_EQUAL_INT(JSON_INVALID, object.type);
 }
 
 
@@ -238,7 +91,7 @@ void ValidStringTest()
     Initialize("{\"String\":\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"}", &object);
     ParseFirst(&object, &pair);
     GetValue(&pair, &value);
-    ExpectNodeText("\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"", &value);
+    EXPECT_NODE_SOURCE("\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"", value);
 }
 
 
@@ -252,36 +105,36 @@ void GetValueTest()
     
     Initialize("{\"Zero\":0,\"Integer\":99,\"Real\":-123.4,\"Mega\":1e9,\"Milli\":1E-3,\"String\":\"Text\",\"Empty\":{},\"Array\":[0,\"one\",{},[]]}", &object);
     status = AllocateString(&object, "String", &string);
-    ExpectTrue(JSON_OK == status);
+    EXPECT_TRUE(JSON_OK == status);
     if (status == JSON_OK)
     {
-        ExpectTrue(strcmp("Text", string) == 0);
+        EXPECT_TRUE(strcmp("Text", string) == 0);
         free(string);
     }
     status = GetInt(&object, "Zero", &integer);
-    ExpectEqualInteger(0, integer);
+    EXPECT_EQUAL_INT(0, integer);
     status = GetInt(&object, "Integer", &integer);
-    ExpectEqualInteger(99, integer);
+    EXPECT_EQUAL_INT(99, integer);
     status = GetInt(&object, "Real", &integer);
-    ExpectEqualInteger(-123, integer);
+    EXPECT_EQUAL_INT(-123, integer);
     status = GetInt(&object, "Mega", &integer);
-    ExpectEqualInteger(1000000000, integer);
+    EXPECT_EQUAL_INT(1000000000, integer);
     status = GetInt(&object, "Milli", &integer);
-    ExpectEqualInteger(0, integer);
+    EXPECT_EQUAL_INT(0, integer);
     status = GetDouble(&object, "Zero", &real);
-    ExpectEqualDouble(0.0, real);
+    EXPECT_EQUAL_DOUBLE(0.0, real, 0.0);
     status = GetDouble(&object, "Integer", &real);
-    ExpectEqualDouble(99.0, real);
+    EXPECT_EQUAL_DOUBLE(99.0, real, 0.0);
     status = GetDouble(&object, "Real", &real);
-    ExpectEqualDouble(-123.4, real);
+    EXPECT_EQUAL_DOUBLE(-123.4, real, 0.0);
     status = GetDouble(&object, "Mega", &real);
-    ExpectEqualDouble(1000000000.0, real);
+    EXPECT_EQUAL_DOUBLE(1000000000.0, real, 0.0);
     status = GetDouble(&object, "Milli", &real);
-    ExpectEqualDouble(0.001, real);
+    EXPECT_EQUAL_DOUBLE(0.001, real, 0.0);
     status = GetObject(&object, "Empty", &sub);
-    ExpectEqualInteger(JSON_OBJECT, sub.type);
+    EXPECT_EQUAL_INT(JSON_OBJECT, sub.type);
     status = GetArray(&object, "Array", &sub);
-    ExpectEqualInteger(JSON_ARRAY, sub.type);
+    EXPECT_EQUAL_INT(JSON_ARRAY, sub.type);
 }
 
 
@@ -291,7 +144,7 @@ void UnicodeTest()
     JsonNode object;
     Initialize("{\"Unicode\":\"\\u0041\\u0042\\u0043\\u005A\"}", &object);
     AllocateString(&object, "Unicode", &string);
-    ExpectEqualString("ABCZ", string);
+    EXPECT_EQUAL_STRING("ABCZ", string);
     free(string);
 }
 
@@ -305,7 +158,7 @@ void ControlCharactersTest()
     AllocateString(&object, "Controls", &string);
     for (i = 0; i < 4; ++i)
     {
-        ExpectEqualInteger(i + 1, string[i]);
+        EXPECT_EQUAL_INT(i + 1, string[i]);
     }
     free(string);
 }
@@ -317,7 +170,7 @@ void EscapeCharactersTest()
     JsonNode object;
     Initialize("{\"Escaped\":\"\\\"\\\\\\/\\b\\f\\r\\n\\t\"}", &object);
     AllocateString(&object, "Escaped", &string);
-    ExpectEqualString("\"\\/\b\f\r\n\t", string);
+    EXPECT_EQUAL_STRING("\"\\/\b\f\r\n\t", string);
     free(string);
 }
 
@@ -328,9 +181,9 @@ void ExpectInvalidString(const char* source)
     char* string;
     JsonStatus status;
     Initialize(source, &object);
-    ExpectEqualInteger(JSON_OBJECT, object.type);
+    EXPECT_EQUAL_INT(JSON_OBJECT, object.type);
     status = AllocateString(&object, "invalid", &string);
-    ExpectEqualInteger(JSON_INVALID_STRING, status);
+    EXPECT_EQUAL_INT(JSON_INVALID_STRING, status);
     free(string);
     
 }
@@ -348,49 +201,49 @@ void InvalidEscapeTest()
 
 int main(int argc, char** argv)
 {
-    StartSuite("JSON Parser Test");
+    startSuite("JSON Parser Test");
 
-    StartTest("ValidIntegerTest");
+    start("ValidIntegerTest");
     ValidIntegerTest();
-    FinishTest();
+    finish();
 
-    StartTest("InvalidIntegerTest");
+    start("InvalidIntegerTest");
     InvalidIntegerTest();
-    FinishTest();
+    finish();
 
-    StartTest("ValidRealTest");
+    start("ValidRealTest");
     ValidRealTest();
-    FinishTest();
+    finish();
 
-    StartTest("InvalidRealTest");
+    start("InvalidRealTest");
     InvalidRealTest();
-    FinishTest();
+    finish();
 
-    StartTest("ValidStringTest");
+    start("ValidStringTest");
     ValidStringTest();
-    FinishTest();
+    finish();
 
-    StartTest("GetValueTest");
+    start("GetValueTest");
     GetValueTest();
-    FinishTest();
+    finish();
 
-    StartTest("UnicodeTest");
+    start("UnicodeTest");
     UnicodeTest();
-    FinishTest();
+    finish();
 
-    StartTest("ControlCharactersTest");
+    start("ControlCharactersTest");
     ControlCharactersTest();
-    FinishTest();
+    finish();
 
-    StartTest("EscapeCharactersTest");
+    start("EscapeCharactersTest");
     EscapeCharactersTest();
-    FinishTest();
+    finish();
 
-    StartTest("InvalidEscapeTest");
+    start("InvalidEscapeTest");
     InvalidEscapeTest();
-    FinishTest();
+    finish();
 
-    FinishSuite();
+    finishSuite();
 
     return (EXIT_SUCCESS);
 }

@@ -19,6 +19,7 @@ char* currentTestName = NULL;
 #define EXPECT_NULL(ACTUAL) expectNull(ACTUAL, __LINE__)
 #define EXPECT_NOT_NULL(ACTUAL) expectNotNull(ACTUAL, __LINE__)
 #define EXPECT_EQUAL_INT(EXPECTED, ACTUAL) expectEqualInt(EXPECTED, ACTUAL, __LINE__)
+#define EXPECT_EQUAL_DOUBLE(EXPECTED, ACTUAL, PRECISION) expectEqualDouble(EXPECTED, ACTUAL, PRECISION, __LINE__)
 #define EXPECT_EQUAL_STRING(EXPECTED, ACTUAL) expectEqualString(EXPECTED, ACTUAL, __LINE__)
 #define EXPECT_STATUS(EXPECTED, ACTUAL) expectStatus(EXPECTED, ACTUAL, __LINE__)
 #define EXPECT_OK(ACTUAL) expectStatus(OK, ACTUAL, __LINE__)
@@ -28,6 +29,7 @@ char* currentTestName = NULL;
 #define ASSERT_NULL(ACTUAL) if (! EXPECT_NULL(ACTUAL)) {return;}
 #define ASSERT_NOT_NULL(ACTUAL) if (! EXPECT_NOT_NULL(ACTUAL)) {return;}
 #define ASSERT_EQUAL_INT(EXPECTED, ACTUAL) if (! EXPECT_EQUAL_INT(EXPECTED, ACTUAL)) {return;}
+#define ASSERT_EQUAL_DOUBLE(EXPECTED, ACTUAL, PRECISION) if (! EXPECT_EQUAL_DOUBLE(EXPECTED, ACTUAL, PRECISION)) {return;}
 #define ASSERT_EQUAL_STRING(EXPECTED, ACTUAL) if (! EXPECT_EQUAL_STRING(EXPECTED, ACTUAL)) {return;}
 #define ASSERT_STATUS(EXPECTED, ACTUAL) if (! EXPECT_STATUS(EXPECTED, ACTUAL)) {return;}
 #define ASSERT_OK(ACTUAL) if (! EXPECT_OK(ACTUAL)) {return;}
@@ -134,6 +136,23 @@ bool expectEqualInt(int expected, int actual, int line)
     else
     {
         sprintf(message, "expected: %d, actual: %d", expected, actual);
+    }
+    printTestLine(pass, line, message);
+    return pass;
+}
+
+
+bool expectEqualDouble(double expected, double actual, double precision, int line)
+{
+    char message[64];
+    bool pass = ((expected - precision <= actual) && (actual <= expected + precision));
+    if (pass)
+    {
+        sprintf(message, "%f", actual);
+    }
+    else
+    {
+        sprintf(message, "expected: %f, actual: %f", expected, actual);
     }
     printTestLine(pass, line, message);
     return pass;
