@@ -8,8 +8,8 @@
 
 void Initialize(char* source, JsonNode* node);
 
-void ParseFirst(const JsonNode* parent, JsonNode* first);
-void ParseNext(const JsonNode* sibling, JsonNode* next);
+//void ParseFirst(const JsonNode* parent, JsonNode* first);
+//void ParseNext(const JsonNode* sibling, JsonNode* next);
 
 void GetValue(const JsonNode* pair, JsonNode* value);
 

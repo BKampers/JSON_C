@@ -484,32 +484,6 @@ void Initialize(char* source, JsonNode* node)
 }
 
 
-void ParseFirst(const JsonNode* parent, JsonNode* first)
-{
-    if (parent->type == JSON_OBJECT)
-    {
-        ScanFirstPair(parent, first);
-    }
-    else if (parent->type == JSON_ARRAY)
-    {
-        ScanFirstElement(parent, first);
-    }
-    else
-    {
-        InitializeNode(first, parent->source);
-    }
-}
-
-
-void ParseNext(const JsonNode* sibling, JsonNode* next)
-{
-    if (sibling->type == JSON_PAIR)
-    {
-        ScanNextPair(sibling, next);
-    }    
-}
-
-
 void GetValue(const JsonNode* pair, JsonNode* value)
 {
     InitializeNode(value, pair->source);

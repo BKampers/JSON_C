@@ -10,25 +10,27 @@
 #define EXPECT_NODE_SOURCE(EXPECTED, NODE) EXPECT_EQUAL_INT(0, strncmp(EXPECTED, NODE.source + NODE.offset, NODE.length))
 
 
-void ExpectValidInteger(char* source, const char* expected)
+void ExpectValidInteger(char* value, int expected)
 {
-    JsonNode object, pair, value;
+    char source[64];
+    JsonNode object;
+    int retrieved;
+    sprintf(source, "{\"int\":%s}", value);
     Initialize(source, &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    EXPECT_EQUAL_INT(JSON_NUMBER, value.type);
-    EXPECT_NODE_SOURCE(expected, value);
+    GetInt(&object, "int", &retrieved);
+    EXPECT_EQUAL_INT(expected, retrieved);
 }
 
 
-void ExpectValidReal(char* source, const char* expected)
+void ExpectValidReal(char* value, double expected)
 {
-    JsonNode object, pair, value;
+    char source[64];
+    JsonNode object;
+    double retrieved;
+    sprintf(source, "{\"double\":%s}", value);
     Initialize(source, &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    EXPECT_EQUAL_INT(JSON_NUMBER, value.type);
-    EXPECT_NODE_SOURCE(expected, value);    
+    GetDouble(&object, "double", &retrieved);
+    EXPECT_EQUAL_DOUBLE(expected, retrieved, 0.0);
 }
 
 
@@ -51,12 +53,11 @@ void ExpectInvalidString(char* source)
 */
 
 void ValidIntegerTest() {
-    ExpectValidInteger("{\"int\":123}", "123");
-    ExpectValidInteger("{\"int\":9}", "9");
-    ExpectValidInteger("{\"int\":0}", "0");
-    ExpectValidInteger("{\"int\":-0}", "-0");
-    ExpectValidInteger("{\"int\":-8}", "-8");
-    ExpectValidInteger("{\"int\":-75}", "-75");
+    ExpectValidInteger("123", 123);
+    ExpectValidInteger("0", 0);
+    ExpectValidInteger("-0", 0);
+    ExpectValidInteger("-8", -8);
+    ExpectValidInteger("-75", -75);
 }
 
 
@@ -73,11 +74,12 @@ void InvalidIntegerTest() {
 
 void ValidRealTest()
 {
-    ExpectValidReal("{\"real\":12.3}",  "12.3");
-    ExpectValidReal("{\"real\":-0.005}",  "-0.005");
-    ExpectValidReal("{\"real\":6.789e+1}",  "6.789e+1");
-    ExpectValidReal("{\"real\":98E-20}",  "98E-20");
-    ExpectValidReal("{\"real\":12e003}",  "12e003");
+    ExpectValidReal("0", 0.0);
+    ExpectValidReal("12.3", 12.3);
+    ExpectValidReal("-0.005", -0.005);
+    ExpectValidReal("6.789e+1", 6.789e+1);
+    ExpectValidReal("98E-20", 98E-20);
+    ExpectValidReal("12e003", 12e003);
 }
 
 
@@ -96,59 +98,6 @@ void InvalidRealTest()
     EXPECT_EQUAL_INT(JSON_INVALID, object.type);
     Initialize("{\"invalid\":45.6E}", &object);
     EXPECT_EQUAL_INT(JSON_INVALID, object.type);
-}
-
-
-void ValidStringTest()
-{
-    JsonNode object, pair, value;
-    Initialize("{\"String\":\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"}", &object);
-    ParseFirst(&object, &pair);
-    GetValue(&pair, &value);
-    EXPECT_NODE_SOURCE("\"\\\"\\f\\n\\r\\t\\\\\\/\\uAc01\"", value);
-}
-
-
-void GetValueTest()
-{
-    JsonStatus status;
-    JsonNode object, sub;
-    char* string;
-    double real;
-    int integer;
-    
-    Initialize("{\"Zero\":0,\"Integer\":99,\"Real\":-123.4,\"Mega\":1e9,\"Milli\":1E-3,\"String\":\"Text\",\"Empty\":{},\"Array\":[0,\"one\",{},[]]}", &object);
-    status = AllocateString(&object, "String", &string);
-    EXPECT_TRUE(JSON_OK == status);
-    if (status == JSON_OK)
-    {
-        EXPECT_TRUE(strcmp("Text", string) == 0);
-        free(string);
-    }
-    status = GetInt(&object, "Zero", &integer);
-    EXPECT_EQUAL_INT(0, integer);
-    status = GetInt(&object, "Integer", &integer);
-    EXPECT_EQUAL_INT(99, integer);
-    status = GetInt(&object, "Real", &integer);
-    EXPECT_EQUAL_INT(-123, integer);
-    status = GetInt(&object, "Mega", &integer);
-    EXPECT_EQUAL_INT(1000000000, integer);
-    status = GetInt(&object, "Milli", &integer);
-    EXPECT_EQUAL_INT(0, integer);
-    status = GetDouble(&object, "Zero", &real);
-    EXPECT_EQUAL_DOUBLE(0.0, real, 0.0);
-    status = GetDouble(&object, "Integer", &real);
-    EXPECT_EQUAL_DOUBLE(99.0, real, 0.0);
-    status = GetDouble(&object, "Real", &real);
-    EXPECT_EQUAL_DOUBLE(-123.4, real, 0.0);
-    status = GetDouble(&object, "Mega", &real);
-    EXPECT_EQUAL_DOUBLE(1000000000.0, real, 0.0);
-    status = GetDouble(&object, "Milli", &real);
-    EXPECT_EQUAL_DOUBLE(0.001, real, 0.0);
-    status = GetObject(&object, "Empty", &sub);
-    EXPECT_EQUAL_INT(JSON_OBJECT, sub.type);
-    status = GetArray(&object, "Array", &sub);
-    EXPECT_EQUAL_INT(JSON_ARRAY, sub.type);
 }
 
 
@@ -272,14 +221,6 @@ int main(int argc, char** argv)
 
     start("InvalidRealTest");
     InvalidRealTest();
-    finish();
-
-    start("ValidStringTest");
-    ValidStringTest();
-    finish();
-
-    start("GetValueTest");
-    GetValueTest();
     finish();
 
     start("UnicodeTest");
