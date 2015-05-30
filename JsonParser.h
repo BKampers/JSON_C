@@ -8,11 +8,6 @@
 
 void Initialize(char* source, JsonNode* node);
 
-//void ParseFirst(const JsonNode* parent, JsonNode* first);
-//void ParseNext(const JsonNode* sibling, JsonNode* next);
-
-void GetValue(const JsonNode* pair, JsonNode* value);
-
 JsonStatus AllocateString(const JsonNode* object, const char* name, char** value);
 JsonStatus GetDouble(const JsonNode* object, const char* name, double* value);
 JsonStatus GetFloat(const JsonNode* object, const char* name, float* value);

@@ -57,9 +57,8 @@ typedef enum
 typedef struct 
 {
     char* source;
-    JsonType type;
-    size_t offset;
     size_t length;
+    JsonType type;
 } JsonNode;
 
 

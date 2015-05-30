@@ -140,7 +140,7 @@ TextStatus AppendValue(StringBuffer* buffer, const void* value, ValueType type)
         }
         case NODE:
         {
-            return AppendSubstring(buffer, ((JsonNode*) value)->source, ((JsonNode*) value)->offset, ((JsonNode*) value)->length);
+            return AppendSubstring(buffer, ((JsonNode*) value)->source, 0, ((JsonNode*) value)->length);
         }
         case LITERAL:
         {
@@ -217,7 +217,6 @@ JsonStatus ComposeObject(JsonNode* object)
     {
         strcpy(object->source, EMPTY_OBJECT_SOURCE);
         object->type = JSON_OBJECT;
-        object->offset = 0;
         object->length = EMPTY_SOURCE_SIZE - 1;
         return JSON_OK;
     }
@@ -291,7 +290,6 @@ JsonStatus ComposeArray(JsonNode* array)
     {
         strcpy(array->source, EMPTY_ARRAY_SOURCE);
         array->type = JSON_ARRAY;
-        array->offset = 0;
         array->length = EMPTY_SOURCE_SIZE - 1;
         return JSON_OK;
     }

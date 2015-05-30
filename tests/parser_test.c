@@ -203,6 +203,29 @@ void NestedSourcesTest()
 }
 
 
+void WhiteSpaceTest()
+{
+    JsonNode root, array;
+    int integer;
+    JsonStatus status;
+    Initialize("\r\n{ \"int\" :\t123 ,\f \"array\"\t :\f\r[0, 1 ,  2  ,   3   ] }\r\n", &root);
+    status = GetInt(&root, "int", &integer);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(123, integer);
+    status = GetArray(&root, "array", &array);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    status = GetIntAt(&array, 0, &integer);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(0, integer);
+    status = GetIntAt(&array, 2, &integer);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(2, integer);
+    status = GetIntAt(&array, 3, &integer);
+    ASSERT_EQUAL_INT(JSON_OK, status);
+    ASSERT_EQUAL_INT(3, integer);
+}
+
+
 int main(int argc, char** argv)
 {
     startSuite("JSON Parser Test");
@@ -243,6 +266,10 @@ int main(int argc, char** argv)
     NestedSourcesTest();
     finish();
 
+    start("WhiteSpaceTest");
+    WhiteSpaceTest();
+    finish();
+    
     finishSuite();
 
     return EXIT_SUCCESS;

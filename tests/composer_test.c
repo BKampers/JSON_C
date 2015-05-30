@@ -6,7 +6,7 @@
 #include "JsonComposer.h"
 
 
-#define EXPECT_NODE_SOURCE(EXPECTED, NODE) EXPECT_EQUAL_INT(0, strncmp(EXPECTED, NODE.source + NODE.offset, NODE.length))
+#define EXPECT_NODE_SOURCE(EXPECTED, NODE) EXPECT_EQUAL_INT(0, strncmp(EXPECTED, NODE.source, NODE.length))
 
 
 void ObjectTest()

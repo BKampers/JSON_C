@@ -15,7 +15,6 @@ void InitializeNode(JsonNode* node, char* source)
 {
     node->source = source;
     node->type = JSON_INVALID;
-    node->offset = 0;
     node->length = 0;
 }
 
@@ -45,22 +44,37 @@ void ScanNext(char* source, JsonNode* node);
 void ScanPair(char* source, size_t offset, JsonNode* pairNode);
 
 
+void ScanPairValue(JsonNode* nameNode, JsonNode* pairNode)
+{
+    JsonNode separatorNode;
+    ScanNext(nameNode->source + nameNode->length, &separatorNode);
+    if (separatorNode.type == JSON_NAME_VALUE_SEPARATOR)
+    {
+        JsonNode valueNode;
+        ScanNext(separatorNode.source + separatorNode.length, &valueNode);
+        if (IsValue(&valueNode))
+        {
+            pairNode->type = JSON_PAIR;
+            pairNode->source = nameNode->source;
+            pairNode->length = (size_t) (valueNode.source - nameNode->source) + valueNode.length;
+        }
+    }    
+}
+
+
 void ScanObject(JsonNode* node)
 {
     JsonNode next;
-    node->length = 1;
-    ScanNext(node->source + node->offset + node->length, &next);
+    ScanNext(node->source + 1, &next);
     while (next.type == JSON_STRING)
     {
-        ScanPair(next.source, 0, &next);
+        ScanPairValue(&next, &next);
         if (next.type == JSON_PAIR)
         {
-            node->length += next.offset + next.length;
-            ScanNext(node->source + node->offset + node->length, &next);
+            ScanNext(next.source + next.length, &next);
             if (next.type == JSON_ELEMENT_SEPARATOR)
             {
-                node->length += next.offset + next.length;
-                ScanNext(node->source + node->offset + node->length, &next);            
+                ScanNext(next.source + next.length, &next);            
             }
         }
         else
@@ -71,7 +85,7 @@ void ScanObject(JsonNode* node)
     if (next.type == JSON_OBJECT_END)
     {
         node->type = JSON_OBJECT;
-        node->length += next.offset + next.length;
+        node->length = (size_t) (next.source - node->source) + next.length;
     }
 }
 
@@ -79,22 +93,19 @@ void ScanObject(JsonNode* node)
 void ScanArray(JsonNode* node)
 {
     JsonNode next;
-    node->length = 1;
-    ScanNext(node->source + node->offset + node->length, &next);
+    ScanNext(node->source + 1, &next);
     while (IsValue(&next))
     {
-        node->length += next.offset + next.length;
-        ScanNext(node->source + node->offset + node->length, &next);
+        ScanNext(next.source + next.length, &next);
         if (next.type == JSON_ELEMENT_SEPARATOR)
         {
-            node->length += next.offset + next.length;
-            ScanNext(node->source + node->offset + node->length, &next);            
+            ScanNext(next.source + next.length, &next);            
         }
     }
     if (next.type == JSON_ARRAY_END)
     {
         node->type = JSON_ARRAY;
-        node->length += next.offset + next.length;
+        node->length = (size_t) (next.source - node->source) + next.length;
     }
 }
 
@@ -105,7 +116,7 @@ void ScanString(JsonNode* node)
     node->length = 1;
     while (scanning)
     {
-        char character = *(node->source + node->offset + node->length);
+        char character = *(node->source + node->length);
         if (character != '\0')
         {
             node->length++;
@@ -133,7 +144,7 @@ void ScanString(JsonNode* node)
 
 bool ScanMinus(JsonNode* node)
 {
-    char character = *(node->source + node->offset + node->length);
+    char character = *(node->source + node->length);
     if (character == '-')
     {
         node->length++;
@@ -148,7 +159,7 @@ bool ScanMinus(JsonNode* node)
 
 bool ScanSign(JsonNode* node)
 {
-    char character = *(node->source + node->offset + node->length);
+    char character = *(node->source + node->length);
     if ((character == '-') || (character == '+'))
     {
         node->length++;
@@ -163,7 +174,7 @@ bool ScanSign(JsonNode* node)
 
 bool ScanDecimalSeparator(JsonNode* node)
 {
-    char character = *(node->source + node->offset + node->length);
+    char character = *(node->source + node->length);
     if (character == '.')
     {
         node->length++;
@@ -178,7 +189,7 @@ bool ScanDecimalSeparator(JsonNode* node)
 
 bool ScanExponentSeparator(JsonNode* node)
 {
-    char character = *(node->source + node->offset + node->length);
+    char character = *(node->source + node->length);
     if ((character == 'e') || (character == 'E'))
     {
         node->length++;
@@ -193,7 +204,7 @@ bool ScanExponentSeparator(JsonNode* node)
 
 bool ScanZero(JsonNode* node)
 {
-    char character = *(node->source + node->offset + node->length);
+    char character = *(node->source + node->length);
     if (character == '0')
     {
         node->length++;
@@ -208,7 +219,7 @@ bool ScanZero(JsonNode* node)
 
 bool ScanPositiveDigit(JsonNode* node)
 {
-    char character = *(node->source + node->offset + node->length);
+    char character = *(node->source + node->length);
     if (('1' <= character) && (character <= '9'))
     {
         node->length++;
@@ -223,7 +234,7 @@ bool ScanPositiveDigit(JsonNode* node)
 
 bool ScanDigit(JsonNode* node)
 {
-    if (isdigit(*(node->source + node->offset + node->length)))
+    if (isdigit(*(node->source + node->length)))
     {
         node->length++;
         return TRUE;
@@ -304,11 +315,11 @@ void ScanNext(char* source, JsonNode* node)
 {
     char character;
     InitializeNode(node, source);
-    while (IsWhiteSpace(*(source + node->offset)))
+    while (IsWhiteSpace(*(node->source)))
     {
-        node->offset++;
+        node->source++;
     }
-    character = *(source + node->offset);
+    character = *(node->source);
     if (character == OBJECT_START)
     {
         ScanObject(node);
@@ -354,19 +365,7 @@ void ScanPair(char* source, size_t offset, JsonNode* pairNode)
     ScanNext(source + offset, &nameNode);
     if (nameNode.type == JSON_STRING)
     {
-        JsonNode separatorNode;
-        ScanNext(nameNode.source + nameNode.offset + nameNode.length, &separatorNode);
-        if (separatorNode.type == JSON_NAME_VALUE_SEPARATOR)
-        {
-            JsonNode valueNode;
-            ScanNext(separatorNode.source + separatorNode.offset + separatorNode.length, &valueNode);
-            if (IsValue(&valueNode))
-            {
-                pairNode->type = JSON_PAIR;
-                pairNode->offset = nameNode.offset + offset;
-                pairNode->length = nameNode.length + separatorNode.offset + separatorNode.length + valueNode.offset + valueNode.length;
-            }
-        }
+        ScanPairValue(&nameNode, pairNode);
     }
 }
 
@@ -382,10 +381,10 @@ void ScanNextPair(const JsonNode* offsetPairNode, JsonNode* nextPairNode)
 {
     JsonNode elementSeparatorNode;
     InitializeNode(nextPairNode, offsetPairNode->source);
-    ScanNext(offsetPairNode->source + offsetPairNode->offset + offsetPairNode->length, &elementSeparatorNode);
+    ScanNext(offsetPairNode->source + offsetPairNode->length, &elementSeparatorNode);
     if (elementSeparatorNode.type == JSON_ELEMENT_SEPARATOR)
     {
-        ScanPair(offsetPairNode->source, offsetPairNode->offset + offsetPairNode->length + elementSeparatorNode.offset + elementSeparatorNode.length, nextPairNode);
+        ScanPair(elementSeparatorNode.source, elementSeparatorNode.length, nextPairNode);
     }
     else if (elementSeparatorNode.type == JSON_OBJECT_END)
     {
@@ -408,10 +407,10 @@ JsonStatus FindPair(const JsonNode* object, const char* name, JsonNode* pair)
         while (pair->type == JSON_PAIR)
         {
             JsonNode nameNode;
-            ScanNext(pair->source + pair->offset, &nameNode);
+            ScanNext(pair->source, &nameNode);
             if (nameNode.type == JSON_STRING)
             {
-                if (strncmp(name, nameNode.source + nameNode.offset + 1, nameNode.length - 2) == 0)
+                if (strncmp(name, nameNode.source + 1, nameNode.length - 2) == 0)
                 {
                     return JSON_OK;
                 }
@@ -425,6 +424,26 @@ JsonStatus FindPair(const JsonNode* object, const char* name, JsonNode* pair)
     else
     {
         return JSON_OBJECT_EXPECTED;
+    }
+}
+
+
+void GetValue(const JsonNode* pair, JsonNode* value)
+{
+    InitializeNode(value, pair->source);
+    if ((pair != NULL) && (pair->type == JSON_PAIR))
+    {
+        JsonNode name;
+        ScanNext(pair->source, &name);
+        if (name.type == JSON_STRING)
+        {
+            JsonNode separator;
+            ScanNext(name.source + name.length, &separator);
+            if (separator.type == JSON_NAME_VALUE_SEPARATOR)
+            {
+                ScanNext(separator.source + separator.length, value);
+            }
+        }
     }
 }
 
@@ -452,10 +471,10 @@ JsonStatus GetNode(const JsonNode* object, const char* name, JsonType type, Json
 
 JsonStatus GetNodeAt(const JsonNode* array, int index, JsonType type, JsonNode* element)
 {
-    size_t offset = array->offset + 1;
+    char* elementSource = array->source + 1;
     while (index >= 0)
     {
-        ScanNext(array->source + offset, element);
+        ScanNext(elementSource, element);
         if (element->type == JSON_ARRAY_END)
         {
             return JSON_OUT_OF_BOUNDS;
@@ -468,7 +487,7 @@ JsonStatus GetNodeAt(const JsonNode* array, int index, JsonType type, JsonNode* 
         {
             index--;
         }
-        offset += element->length;
+        elementSource = element->source + element->length ;
     }
     return JSON_INVALID_PARAMETER;
 }
@@ -484,26 +503,6 @@ void Initialize(char* source, JsonNode* node)
 }
 
 
-void GetValue(const JsonNode* pair, JsonNode* value)
-{
-    InitializeNode(value, pair->source);
-    if ((pair != NULL) && (pair->type == JSON_PAIR))
-    {
-        JsonNode name;
-        ScanNext(pair->source + pair->offset, &name);
-        if (name.type == JSON_STRING)
-        {
-            JsonNode separator;
-            ScanNext(name.source + name.offset + name.length, &separator);
-            if (separator.type == JSON_NAME_VALUE_SEPARATOR)
-            {
-                ScanNext(separator.source + separator.offset + separator.length, value);
-            }
-        }
-    }
-}
-
-
 JsonStatus ProcessUnicode(const JsonNode* node, size_t* index, char* character)
 {
     JsonStatus status = JSON_OK;
@@ -514,7 +513,7 @@ JsonStatus ProcessUnicode(const JsonNode* node, size_t* index, char* character)
         (*index)++;
         if (*index < node->length - 1)
         {
-            char digit = *(node->source + node->offset + *index);
+            char digit = *(node->source + *index);
             unicode <<= 4;
             if (('0' <= digit) && (digit <= '9'))
             {
@@ -549,7 +548,7 @@ JsonStatus ProcessEscapeCharacter(const JsonNode* node, size_t* index, char* cha
     (*index)++;
     if (*index < node->length - 1)
     {
-        char escaped = *(node->source + node->offset + *index);
+        char escaped = *(node->source + *index);
         switch (escaped)
         {
             case '\"':
@@ -599,7 +598,7 @@ JsonStatus AllocateString(const JsonNode* object, const char* name, char** value
         *value = malloc(node.length - 2);
         for (i = 1; (i < node.length - 1) && status == JSON_OK; ++i)
         {
-            char character = *(node.source + node.offset + i);
+            char character = *(node.source + i);
             if (character == '\\')
             {
                 status = ProcessEscapeCharacter(&node, &i, &character);
@@ -619,7 +618,7 @@ JsonStatus GetDouble(const JsonNode* object, const char* name, double* value)
     JsonStatus status = GetNode(object, name, JSON_NUMBER, &node);
     if (status == JSON_OK)
     {
-        *value = atof(node.source + node.offset);
+        *value = atof(node.source);
     }
     return status;
 }
@@ -667,7 +666,7 @@ JsonStatus GetDoubleAt(const JsonNode* array, int index, double* element)
     JsonStatus status = GetNodeAt(array, index, JSON_NUMBER, &node);
     if (status == JSON_OK)
     {
-        *element = atof(node.source + node.offset);
+        *element = atof(node.source);
     }
     return status;
 }
