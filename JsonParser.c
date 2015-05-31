@@ -11,6 +11,9 @@ const char* WHITE_SPACES = " \f\n\r\t";
 const char* NUMBER_CHARACTERS = ".+-Ee";
 
 
+void ScanNext(char* source, JsonNode* node);
+
+
 void InitializeNode(JsonNode* node, char* source)
 {
     node->source = source;
@@ -38,10 +41,6 @@ bool IsValue(const JsonNode* node)
             return FALSE;
     }
 }
-
-
-void ScanNext(char* source, JsonNode* node);
-void ScanPair(char* source, size_t offset, JsonNode* pairNode);
 
 
 void ScanPairValue(JsonNode* nameNode, JsonNode* pairNode)
@@ -359,21 +358,14 @@ void ScanNext(char* source, JsonNode* node)
 }
 
 
-void ScanPair(char* source, size_t offset, JsonNode* pairNode)
+void ScanPair(char* source, JsonNode* pairNode)
 {
     JsonNode nameNode;
-    ScanNext(source + offset, &nameNode);
+    ScanNext(source, &nameNode);
     if (nameNode.type == JSON_STRING)
     {
         ScanPairValue(&nameNode, pairNode);
     }
-}
-
-
-void ScanFirstPair(const JsonNode* objectNode, JsonNode* pairNode)
-{
-    InitializeNode(pairNode, objectNode->source);
-    ScanPair(objectNode->source, 1, pairNode);
 }
 
 
@@ -384,7 +376,7 @@ void ScanNextPair(const JsonNode* offsetPairNode, JsonNode* nextPairNode)
     ScanNext(offsetPairNode->source + offsetPairNode->length, &elementSeparatorNode);
     if (elementSeparatorNode.type == JSON_ELEMENT_SEPARATOR)
     {
-        ScanPair(elementSeparatorNode.source, elementSeparatorNode.length, nextPairNode);
+        ScanPair(elementSeparatorNode.source + elementSeparatorNode.length, nextPairNode);
     }
     else if (elementSeparatorNode.type == JSON_OBJECT_END)
     {
@@ -393,17 +385,12 @@ void ScanNextPair(const JsonNode* offsetPairNode, JsonNode* nextPairNode)
 }
 
 
-void ScanFirstElement(const JsonNode* containerNode, JsonNode* elementNode)
-{
-    ScanNext(containerNode->source + 1, elementNode);
-}
-
-
 JsonStatus FindPair(const JsonNode* object, const char* name, JsonNode* pair)
 {
     if ((object != NULL) && (object->type == JSON_OBJECT))
     {
-        ScanFirstPair(object, pair);
+        InitializeNode(pair, object->source);
+        ScanPair(object->source + 1, pair);
         while (pair->type == JSON_PAIR)
         {
             JsonNode nameNode;
@@ -487,7 +474,7 @@ JsonStatus GetNodeAt(const JsonNode* array, int index, JsonType type, JsonNode* 
         {
             index--;
         }
-        elementSource = element->source + element->length ;
+        elementSource = element->source + element->length;
     }
     return JSON_INVALID_PARAMETER;
 }
